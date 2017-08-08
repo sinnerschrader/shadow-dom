@@ -1,0 +1,27 @@
+{
+  "name": "shadow-dom",
+  "version": "0.0.1",
+  "description": "A shadow-dom ponyfill",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sinnerschrader/shadow-dom.git"
+  },
+  "keywords": [
+    "shadowdom",
+    "shadow-dom",
+    "ponyfill",
+    "polyfill",
+    "cross",
+    "browser"
+  ],
+  "author": "Gregor Adams <greg@pixelass.com> (http://pixelass.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sinnerschrader/shadow-dom/issues"
+  },
+  "homepage": "https://github.com/sinnerschrader/shadow-dom#readme"
+}
