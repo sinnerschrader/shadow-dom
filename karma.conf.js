@@ -25,13 +25,11 @@ module.exports = config => {
     exclude: [
     ],
 
-
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      'test/test.js': ['webpack']
+      '*.js': ['webpack']
     },
-
 
     // test results reporter to use
     // possible values: 'dots', 'progress'
