@@ -2,9 +2,8 @@
   "name": "shadow-dom",
   "version": "0.0.1",
   "description": "A shadow-dom ponyfill",
-  "main": "index.js",
   "scripts": {
-    "babel": "babel index.es > index.js",
+    "babel": "babel src.js > index.js",
     "test": "karma start karma.conf.js"
   },
   "repository": {
