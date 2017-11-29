@@ -1,7 +1,6 @@
+import ShadowDOM from './src';
+
 const browserSupportsShadowDOM = ('attachShadow' in document.createElement('div'));
-
-import ShadowDOM from '../index.es';
-
 const regularDOM = document.createElement('div');
 const shadowDOMContainer = document.createElement('div');
 const bodyElement = document.querySelector('body');
