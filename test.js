@@ -15,7 +15,7 @@ it('has a shadowRoot property', () => {
 it('is native if supported and polyfilled if not', () => {
   const {shadowDOM, cleanup} = setup();
   const expected = HAS_SHADOWDOM ? '[object ShadowRoot]' : '[object HTMLBodyElement]';
-  expect(shadowDOM.shadowRoot.toString()).toBe(expected);
+  expect(shadowDOM.shadowRoot.toString()).toBe(expected);+
   cleanup();
 });
 
