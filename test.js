@@ -65,7 +65,7 @@ function setup(html) {
   const innerHTML = shadowEl.innerHTML;
 
   const scope = shadowDom(el);
-  scope.innerHTML = innerHTML;
+  scope.shadowRoot.innerHTML = innerHTML;
 
   return {
     el,
