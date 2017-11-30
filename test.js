@@ -1,49 +1,32 @@
 import ShadowDOM from './src';
 
-const browserSupportsShadowDOM = ('attachShadow' in document.createElement('div'));
-const regularDOM = document.createElement('div');
-const shadowDOMContainer = document.createElement('div');
-const bodyElement = document.querySelector('body');
+const HAS_SHADOWDOM = ('attachShadow' in document.createElement('div'));
 
-bodyElement.appendChild(regularDOM);
-bodyElement.appendChild(shadowDOMContainer);
-
-regularDOM.innerHTML = `
-    <style>
-        h3 {
-            color: #f00;
-        }
-    </style>
-    <h3>Regular DOM</span>
-`;
-
-const shadowDOM = new ShadowDOM(shadowDOMContainer);
-
-shadowDOM.innerHTML = `
-    <style>
-        h3 {
-            color: #0f0;
-        }
-    </style>
-    <h3>Shadow DOM</span>
-`;
-
-describe('Basic tests', function() {
-    it('ShadowDOM ponyfill class should exist', function() {
-        expect(ShadowDOM).toBeDefined();
-    });
-
-    it('ShadowDOM instance has a shadowRoot property', function() {
-        expect(shadowDOM.shadowRoot).toBeDefined();
-    });
-
-    if (browserSupportsShadowDOM) {
-        it('shadowRoot property is a ShadowRoot instance if browser supports native shadow DOM', function() {
-            expect(shadowDOM.shadowRoot.toString()).toBe('[object ShadowRoot]');
-        });
-    } else {
-        it('shadowRoot property is an body element instance if browser does not support native shadow DOM', function() {
-            expect(shadowDOM.shadowRoot.toString()).toBe('[object HTMLBodyElement]');
-        });
-    }
+it('should exist', () => {
+    expect(ShadowDOM).toBeDefined();
 });
+
+it('has a shadowRoot property', () => {
+  const {shadowDOM, cleanup} = setup();
+  expect(shadowDOM.shadowRoot).toBeDefined();
+  cleanup();
+});
+
+it('is native if supported and polyfilled if not', () => {
+  const {shadowDOM, cleanup} = setup();
+  const expected = HAS_SHADOWDOM ? '[object ShadowRoot]' : '[object HTMLBodyElement]';
+  expect(shadowDOM.shadowRoot.toString()).toBe(expected);
+  cleanup();
+});
+
+function setup() {
+  const el = document.createElement('div');
+  document.body.appendChild(el);
+  return {
+    el,
+    cleanup() {
+      document.body.removeChild(el);
+    },
+    shadowDOM: new ShadowDOM(el)
+  };
+}
