@@ -1,0 +1,18 @@
+<style>
+  .a, .a .b {
+    color: red;
+  }
+
+  .b {
+    color: green;
+  }
+</style>
+
+<div class="a">
+  This should be red
+  <div class="shadow-dom">
+    <p class="b">
+      This should be green
+    </p>
+  </div>
+</div>
