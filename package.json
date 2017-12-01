@@ -4,7 +4,7 @@
   "description": "A shadow-dom ponyfill",
   "scripts": {
     "babel": "babel src.js > index.js",
-    "test": "karma start karma.js",
+    "test": "karma start karma.local.js",
     "test:remote": "karma start karma.remote.js"
   },
   "repository": {

@@ -1,7 +1,8 @@
 module.exports = config => {
   if (!process.env.BROWSER_STACK_USERNAME || !process.env.BROWSER_STACK_ACCESS_KEY) {
-    console.log('Make sure the BROWSER_STACK_USERNAME and BROWSER_STACK_ACCESS_KEY environment variables are set.')
-    process.exit(1)
+    console.log('Falling back to local tests as BROWSER_STACK_USERNAME and BROWSER_STACK_ACCESS_KEY are not set.');
+    require('./karma.local.js');
+    process.exit(0);
   }
 
   config.set({
