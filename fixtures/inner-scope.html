@@ -1,6 +1,9 @@
-<style>
+  <style>
     .a {
       color: red;
+    }
+    .b {
+      color: green;
     }
   </style>
 
@@ -14,9 +17,3 @@
       </p>
     </div>
   </div>
-
-  <script>
-    var style = document.createElement('style');
-    style.textContent = '.b { color: green; }';
-    document.head.insertBefore(style, document.head.firstChild);
-  </script>

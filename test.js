@@ -29,26 +29,27 @@ it('is plain element if unsupported', () => {
 });
 
 it('enforces basic scoping', () => {
-  if (HAS_SHADOWDOM) {
-    return;
+  const {scope, cleanup} = fixture('basic-scope');
+
+  if (!HAS_SHADOWDOM) {
+    const b = scope.shadowRoot.querySelector('.b');
+    const color = window.getComputedStyle(b).getPropertyValue('color');
+    expect(color).toBe('rgb(0, 0, 0)');
   }
 
-  const {scope, cleanup} = fixture('basic-scope');
-  const b = scope.shadowRoot.querySelector('.b');
-  const color = window.getComputedStyle(b).getPropertyValue('color');
-  expect(color).toBe('rgb(0, 0, 0)');
   cleanup();
 });
 
-it('does not overrride styling of inner scope', () => {
-  if (HAS_SHADOWDOM) {
-    return;
-  }
+fit('does not overrride styling of inner scope', () => {
   const {scope, cleanup} = fixture('inner-scope');
-  const b = scope.shadowRoot.querySelector('.b');
-  const color = window.getComputedStyle(b).getPropertyValue('color');
-  expect(color).toBe('rgb(0, 128, 0)');
-  // cleanup();
+
+  if (!HAS_SHADOWDOM) {
+    const b = scope.shadowRoot.querySelector('.b');
+    const color = window.getComputedStyle(b).getPropertyValue('color');
+    expect(color).toBe('rgb(0, 128, 0)');
+  }
+
+  cleanup();
 });
 
 function fixture(name) {

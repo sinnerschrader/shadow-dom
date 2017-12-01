@@ -66,6 +66,6 @@ module.exports = config => {
       },
     },
 
-    browsers: ['ChromeHeadless', 'FirefoxHeadless', 'Firefox']
+    browsers: ['ChromeHeadless', 'FirefoxHeadless']
   })
 }
