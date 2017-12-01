@@ -32,19 +32,41 @@ function getAll() {
   return Array.prototype.slice.call(window.getComputedStyle(document.body), 0);
 }
 
+function getValue() {
+  const frame = document.createElement('iframe');
+  document.body.appendChild(frame);
+
+  const win = frame.contentWindow;
+  const doc = frame.contentDocument;
+
+  const el = doc.createElement('div');
+  doc.body.appendChild(el);
+
+  const computed = win.getComputedStyle(el);
+  const props = Array.prototype.slice.call(computed, 0);
+  const styles = props.reduce((acc, prop) => {
+    acc[prop] = computed.getPropertyValue(prop);
+    return acc;
+  }, {});
+
+  document.body.removeChild(frame);
+  return (prop) => styles[prop];
+}
+
 function interrupt(el) {
   const id = shortid();
   const all = supports('all');
   const initial = supports('initial');
 
   const props = (all && initial) ? ['all'] : getAll();
+  const initialFor = getValue();
 
   const style = document.createElement('style');
   style.setAttribute('data-id', id);
 
   style.textContent = `
     .${id} {
-      ${props.map(prop => `${prop}: initial`).join(';')}
+      ${props.map(prop => `${prop}: ${initial ? 'initial' : initialFor(prop)}`).join(';\n')}
     }
   `;
 

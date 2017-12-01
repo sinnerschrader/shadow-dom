@@ -37,7 +37,7 @@ it('enforces basic scoping', () => {
   const b = scope.shadowRoot.querySelector('.b');
   const color = window.getComputedStyle(b).getPropertyValue('color');
   expect(color).toBe('rgb(0, 0, 0)');
-  cleanup();
+  // cleanup();
 });
 
 function fixture(name) {
