@@ -66,9 +66,13 @@ module.exports = config => {
       module: {
         loaders: [
           {
-            test: /\.(js?|es?)$/,
+            test: /\.js?$/,
             exclude: /node_modules/,
             loader: 'babel-loader'
+          },
+          {
+            test: /\.html?$/,
+            loader: 'raw-loader'
           }
         ],
       },
