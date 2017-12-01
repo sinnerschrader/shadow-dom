@@ -12,9 +12,12 @@ function shadowDom(el) {
 
   const id = shortid.generate();
   const shadowRoot = document.createElement('div');
-
-  el.id = id;
   el.innerHTML = '';
+
+  shadowRoot.id = id;
+  shadowRoot.innerHTML = '';
+  shadowRoot.style.all = 'initial';
+
   el.appendChild(shadowRoot);
 
   return {

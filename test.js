@@ -36,7 +36,7 @@ it('enforces basic scoping', () => {
   const {scope, cleanup} = fixture('basic-scope');
   const b = scope.shadowRoot.querySelector('.b');
   const color = window.getComputedStyle(b).getPropertyValue('color');
-  expect(color).toBe('rgb(0, 128, 0)');
+  expect(color).toBe('rgb(0, 0, 0)');
   cleanup();
 });
 
@@ -50,25 +50,27 @@ function setup(html) {
 
   if (html) {
     el.innerHTML = html;
+  } else {
+    const auto = document.createElement('div');
+    auto.classList.add('shadow-dom');
+    el.appendChild(auto);
   }
 
   document.body.appendChild(el);
 
-  const provided = el.querySelector('.shadow-dom');
+  const shadowElement = el.querySelector('.shadow-dom');
 
-  if (html && !provided) {
+  if (!shadowElement) {
     throw new Error(`setup failed, html provided but no .shadow-dom element found`);
   }
 
-  const shadowEl = html ? provided : el;
   const cleanup = () => document.body.removeChild(el);
-  const innerHTML = shadowEl.innerHTML;
 
-  const scope = shadowDom(el);
+  const innerHTML = shadowElement.innerHTML;
+  const scope = shadowDom(shadowElement);
   scope.shadowRoot.innerHTML = innerHTML;
 
   return {
-    el,
     cleanup,
     scope
   };
