@@ -28,15 +28,28 @@ function shadowDom(el) {
   };
 }
 
+function getAll() {
+  return Array.prototype.slice.call(window.getComputedStyle(document.body), 0);
+}
+
 function interrupt(el) {
+  const id = shortid();
   const all = supports('all');
   const initial = supports('initial');
 
-  if (all && initial) {
-    el.style.all = 'intial';
-    return el;
-  }
+  const props = (all && initial) ? ['all'] : getAll();
 
+  const style = document.createElement('style');
+  style.setAttribute('data-id', id);
+
+  style.textContent = `
+    .${id} {
+      ${props.map(prop => `${prop}: initial`).join(';')}
+    }
+  `;
+
+  el.classList.add(id);
+  document.head.appendChild(style);
   return el;
 }
 
