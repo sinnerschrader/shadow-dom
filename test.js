@@ -37,6 +37,17 @@ it('enforces basic scoping', () => {
   const b = scope.shadowRoot.querySelector('.b');
   const color = window.getComputedStyle(b).getPropertyValue('color');
   expect(color).toBe('rgb(0, 0, 0)');
+  cleanup();
+});
+
+it('does not overrride styling of inner scope', () => {
+  if (HAS_SHADOWDOM) {
+    return;
+  }
+  const {scope, cleanup} = fixture('inner-scope');
+  const b = scope.shadowRoot.querySelector('.b');
+  const color = window.getComputedStyle(b).getPropertyValue('color');
+  expect(color).toBe('rgb(0, 128, 0)');
   // cleanup();
 });
 

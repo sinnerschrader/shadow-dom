@@ -1,0 +1,22 @@
+<style>
+    .a {
+      color: red;
+    }
+  </style>
+
+  <div class="a">
+    <p>
+      This should be blue
+    </p>
+    <div class="shadow-dom">
+      <p class="b">
+        This should be green
+      </p>
+    </div>
+  </div>
+
+  <script>
+    var style = document.createElement('style');
+    style.textContent = '.b { color: green; }';
+    document.head.insertBefore(style, document.head.firstChild);
+  </script>
