@@ -1,0 +1,21 @@
+<style>
+  .b {
+    color: green;
+  }
+</style>
+
+<div class="b">
+  <p>
+    This should be green
+  </p>
+  <div class="shadow-dom">
+    <p class="b">
+      This should be red
+    </p>
+    <style>
+      .b {
+        color: red;
+      }
+    </style>
+  </div>
+</div>

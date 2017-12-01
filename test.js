@@ -40,11 +40,24 @@ it('enforces basic scoping', () => {
   cleanup();
 });
 
-fit('does not overrride styling of inner scope', () => {
+it('does not overrride styling of inner scope', () => {
   const {scope, cleanup} = fixture('inner-scope');
 
   if (!HAS_SHADOWDOM) {
     const b = scope.shadowRoot.querySelector('.b');
+    const color = window.getComputedStyle(b).getPropertyValue('color');
+    expect(color).toBe('rgb(0, 128, 0)');
+  }
+
+  cleanup();
+});
+
+
+it('protects surroundings against bleeding', () => {
+  const {scope, cleanup} = fixture('bleeding-scope');
+
+  if (!HAS_SHADOWDOM) {
+    const b = document.body.querySelector('.b');
     const color = window.getComputedStyle(b).getPropertyValue('color');
     expect(color).toBe('rgb(0, 128, 0)');
   }
