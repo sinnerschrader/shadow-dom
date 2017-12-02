@@ -23,7 +23,21 @@ function shadowDom(el) {
 
   return {
     get shadowRoot() {
-      return shadowRoot;
+      return {
+        set innerHTML(innerHTML) {
+          shadowRoot.innerHTML = innerHTML;
+        },
+        get innerHTML() {
+          console.log(innerHTML);
+          return shadowRoot.innerHTML;
+        },
+        querySelector(...args) {
+          return shadowRoot.querySelector(...args);
+        },
+        toString() {
+          return shadowRoot.toString();
+        }
+      };
     }
   };
 }

@@ -2,16 +2,18 @@
     .a {
       color: red;
     }
-    .b {
-      color: green;
-    }
   </style>
 
   <div class="a">
     <p>
-      This should be blue
+      This should be red
     </p>
     <div class="shadow-dom">
+      <style>
+        .b {
+          color: green;
+        }
+      </style>
       <p class="b">
         This should be green
       </p>

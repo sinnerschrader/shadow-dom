@@ -23,7 +23,7 @@ it('is native if supported', () => {
 it('is plain element if unsupported', () => {
   const {scope, cleanup} = setup();
   if (!HAS_SHADOWDOM) {
-    expect(scope.shadowRoot instanceof HTMLElement).toBeTruthy();
+    expect(scope.shadowRoot.toString()).toBe('[object HTMLDivElement]');
   }
   cleanup();
 });
