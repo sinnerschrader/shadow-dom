@@ -1,6 +1,9 @@
 import shortid from 'shortid';
 import { setTimeout } from 'core-js/library/web/timers';
 
+const parser = new DOMParser();
+const serializer = new XMLSerializer();
+
 const SUPPORTS_SHADOW_DOM = ('attachShadow' in HTMLElement.prototype);
 
 export default shadowDom;
@@ -25,10 +28,24 @@ function shadowDom(el) {
     get shadowRoot() {
       return {
         set innerHTML(innerHTML) {
-          shadowRoot.innerHTML = innerHTML;
+          const doc = parser.parseFromString(innerHTML, 'text/html');
+          const styles = [...doc.querySelectorAll('style')];
+
+          styles.forEach(style => {
+            const rules = Array.prototype.slice.call(style.sheet.cssRules, 0)
+              .filter(rule => rule.type === CSSRule.STYLE_RULE)
+              .map((rule, index) => {
+                const selector = [`#${id}`, rule.selectorText].join(' ');
+                const body = rule.style.cssText;
+                return `${selector} {${body}}`;
+              });
+
+            style.textContent = rules.join(' ');
+          });
+
+          shadowRoot.innerHTML = serializer.serializeToString(doc);
         },
         get innerHTML() {
-          console.log(innerHTML);
           return shadowRoot.innerHTML;
         },
         querySelector(...args) {
