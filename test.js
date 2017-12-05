@@ -40,7 +40,7 @@ it('enforces basic scoping', () => {
   cleanup();
 });
 
-it('does not overrride styling of inner scope', () => {
+it('respects styling of inner scope', () => {
   const {scope, cleanup} = fixture('inner-scope');
 
   if (!HAS_SHADOWDOM) {
@@ -53,7 +53,7 @@ it('does not overrride styling of inner scope', () => {
 });
 
 
-it('protects surroundings against bleeding', () => {
+it('prevents bleeding', () => {
   const {scope, cleanup} = fixture('bleeding-scope');
 
   if (!HAS_SHADOWDOM) {
@@ -65,7 +65,7 @@ it('protects surroundings against bleeding', () => {
   cleanup();
 });
 
-it('protects surroundings against bleeding from basic media queries', () => {
+it('prevents bleeding via basic media queries', () => {
   const {scope, cleanup} = fixture('bleeding-scope-mq-basic');
 
   if (!HAS_SHADOWDOM) {
@@ -82,7 +82,7 @@ it('protects surroundings against bleeding from basic media queries', () => {
   cleanup();
 });
 
-it('protects sourroudings against bleeding from complex media queries', () => {
+it('prevents bleeding via complex media queries', () => {
   const {scope, cleanup} = fixture('bleeding-scope-mq-complex');
 
     if (!HAS_SHADOWDOM) {
