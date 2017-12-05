@@ -39,7 +39,6 @@ function shadowDom(el) {
                 const body = rule.style.cssText;
                 return `${selector} {${body}}`;
               });
-
             style.textContent = rules.join(' ');
           });
 
