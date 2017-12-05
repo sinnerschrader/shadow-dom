@@ -34,7 +34,6 @@ function shadowDom(el) {
           styles.forEach(style => {
             const rules = Array.prototype.slice.call(style.sheet.cssRules, 0);
             style.textContent = scope(id, rules).join(' ');
-            console.log(style.textContent);
           });
 
           shadowRoot.innerHTML = serializer.serializeToString(doc);
