@@ -65,8 +65,8 @@ it('protects surroundings against bleeding', () => {
   cleanup();
 });
 
-it('protects surroundings against bleeding from media queries', () => {
-  const {scope, cleanup} = fixture('bleeding-scope-mq');
+it('protects surroundings against bleeding from basic media queries', () => {
+  const {scope, cleanup} = fixture('bleeding-scope-mq-basic');
 
   if (!HAS_SHADOWDOM) {
     const outer = document.body.querySelector('.b');
@@ -80,6 +80,23 @@ it('protects surroundings against bleeding from media queries', () => {
   }
 
   cleanup();
+});
+
+it('protects sourroudings against bleeding from complex media queries', () => {
+  const {scope, cleanup} = fixture('bleeding-scope-mq-complex');
+
+    if (!HAS_SHADOWDOM) {
+      const outer = document.body.querySelector('.b');
+      const outerColor = window.getComputedStyle(outer).getPropertyValue('color');
+
+      const inner = scope.shadowRoot.querySelector('.b');
+      const innerColor = window.getComputedStyle(inner).getPropertyValue('color');
+
+      expect(outerColor).toBe('rgb(0, 128, 0)');
+      expect(innerColor).toBe('rgb(255, 0, 0)');
+    }
+
+    cleanup();
 });
 
 function fixture(name) {
