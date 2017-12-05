@@ -32,14 +32,9 @@ function shadowDom(el) {
           const styles = [...doc.querySelectorAll('style')];
 
           styles.forEach(style => {
-            const rules = Array.prototype.slice.call(style.sheet.cssRules, 0)
-              .filter(rule => rule.type === CSSRule.STYLE_RULE)
-              .map((rule, index) => {
-                const selector = [`#${id}`, rule.selectorText].join(' ');
-                const body = rule.style.cssText;
-                return `${selector} {${body}}`;
-              });
-            style.textContent = rules.join(' ');
+            const rules = Array.prototype.slice.call(style.sheet.cssRules, 0);
+            style.textContent = scope(id, rules).join(' ');
+            console.log(style.textContent);
           });
 
           shadowRoot.innerHTML = serializer.serializeToString(doc);
@@ -148,4 +143,22 @@ function supports(feature) {
     default:
       throw new TypeError(`supports: unknown feature "${feature}".`);
   }
+}
+
+function scope(id, rules) {
+  return rules.map((rule, index) => {
+    switch(rule.type) {
+      case CSSRule.STYLE_RULE: {
+        const selector = [`#${id}`, rule.selectorText].join(' ');
+        const body = rule.style.cssText;
+        return `${selector} {${body}}`;
+      }
+      case CSSRule.MEDIA_RULE: {
+        const mediaRules = Array.prototype.slice.call(rule.cssRules);
+        return `@media ${rule.conditionText} {${scope(id, mediaRules)}}`;
+      }
+      default:
+        return rule.cssText;
+    }
+  });
 }
