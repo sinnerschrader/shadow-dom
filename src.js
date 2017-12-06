@@ -1,5 +1,4 @@
 import shortid from 'shortid';
-import { setTimeout } from 'core-js/library/web/timers';
 
 const parser = new DOMParser();
 const serializer = new XMLSerializer();
@@ -31,9 +30,17 @@ function shadowDom(el) {
           const doc = parser.parseFromString(innerHTML, 'text/html');
           const styles = [...doc.querySelectorAll('style')];
 
-          styles.forEach(style => {
-            const rules = Array.prototype.slice.call(style.sheet.cssRules, 0);
-            style.textContent = scope(id, rules).join(' ');
+          const replacements = styles
+            .map(style => {
+              const rules = Array.prototype.slice.call(style.sheet.cssRules, 0);
+              return {
+                target: style,
+                result: scope(id, rules).join(' ')
+              };
+            });
+
+          replacements.forEach(replacement => {
+            replacement.target.textContent = replacement.result;
           });
 
           shadowRoot.innerHTML = serializer.serializeToString(doc);
