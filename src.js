@@ -14,9 +14,10 @@ function shadowDom(el) {
     return el;
   }
 
-  const id = shortid.generate();
-  const shadowRoot = interrupt(document.createElement('div'));
   el.innerHTML = '';
+
+  const id = shortid.generate();
+  const {shadowRoot} = interrupt(document.createElement('div'), {id, parent: el});
 
   shadowRoot.id = id;
   shadowRoot.innerHTML = '';
@@ -88,6 +89,23 @@ function shadowDom(el) {
   });
 } */
 
+function flattenRules(rules) {
+  return rules.reduce((acc, r) => {
+    switch (r.type) {
+      case CSSRule.STYLE_RULE:
+        acc.push(r);
+        break;
+      case CSSRule.MEDIA_RULE:
+      case CSSRule.SUPPORTS_RULE:
+        Array.prototype.push.apply(acc, flattenRules(Array.prototype.slice.call(r.cssRules, 0)));
+        break;
+      default:
+        return acc;
+    }
+    return acc;
+  }, []);
+}
+
 function getAll() {
   return Array.prototype.slice.call(window.getComputedStyle(document.body), 0);
 }
@@ -113,8 +131,7 @@ function getValue() {
   return (prop) => styles[prop];
 }
 
-function interrupt(el) {
-  const id = shortid();
+function interrupt(el, {parent, id}) {
   const all = supports('all');
   const initial = supports('initial');
 
@@ -122,17 +139,41 @@ function interrupt(el) {
   const initialFor = getValue();
 
   const style = document.createElement('style');
-  style.setAttribute('data-id', id);
+  style.setAttribute('data-shadow-dom-id', id);
 
   style.textContent = `
-    .${id} {
+    #${id} {
       ${props.map(prop => `${prop}: ${initial ? 'initial' : initialFor(prop)}`).join(';\n')}
     }
   `;
 
+  const allRules = Array.prototype.slice.call(document.querySelectorAll('style'), 0)
+    .reduce((rules, style) => {
+      Array.prototype.push.apply(rules, style.sheet.cssRules);
+      return rules;
+    }, []);
+
+  const importantRules = flattenRules(allRules)
+    .filter((rule) => {
+      const propNames = Array.prototype.slice.call(rule.style, 0);
+      return propNames.some(propName => rule.style.getPropertyPriority(propName));
+    }, []);
+
+  if (importantRules.length > 0) {
+    style.textContent += importantRules.map(importantRule => {
+      const propNames = Array.prototype.slice.call(importantRule.style, 0);
+      return `#${id} ${importantRule.selectorText} {
+        ${propNames.map(prop => `${prop}: ${initialFor(prop)}!important;`).join('\n')}
+      }`;
+    });
+  }
+
   el.classList.add(id);
-  document.head.appendChild(style);
-  return el;
+  parent.insertBefore(style, parent.firstChild);
+
+  return {
+    shadowRoot: el
+  };
 }
 
 function matches(el, selector) {
