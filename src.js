@@ -257,10 +257,25 @@ function scope(rules, {id}) {
       }
       case CSSRule.MEDIA_RULE: {
         const mediaRules = Array.prototype.slice.call(rule.cssRules);
-        return `@media ${rule.conditionText} {${scope(mediaRules, {id})}}`;
+        return `@media ${getCondition(rule, 'media')} {${scope(mediaRules, {id})}}`;
       }
       default:
         return rule.cssText;
     }
   });
+}
+
+function getCondition(rule, keyword) {
+  if ('conditionText' in rule) {
+    return rule.conditionText;
+  }
+
+  const reg = new RegExp(`@${keyword}\s?([^{]+)\s?`, 'i');
+  const result = reg.exec(rule.cssText);
+
+  if (result === null) {
+    throw new TypeError(`Could not parse conditionText from ${rule.cssText}`);
+  }
+
+  return result[1].trim();
 }
