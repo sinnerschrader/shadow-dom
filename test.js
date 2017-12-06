@@ -85,15 +85,28 @@ it('prevents bleeding via basic media queries', () => {
 it('prevents bleeding via complex media queries', () => {
   const {scope, cleanup} = fixture('bleeding-scope-mq-complex');
 
+  if (!HAS_SHADOWDOM) {
+    const outer = document.body.querySelector('.b');
+    const outerColor = window.getComputedStyle(outer).getPropertyValue('color');
+    const inner = scope.shadowRoot.querySelector('.b');
+    const innerColor = window.getComputedStyle(inner).getPropertyValue('color');
+    expect(outerColor).toBe('rgb(0, 128, 0)');
+    expect(innerColor).toBe('rgb(255, 0, 0)');
+  }
+
+  cleanup();
+});
+
+it('resets !important rules', () => {
+  const {scope, cleanup} = fixture('important-outer');
+
     if (!HAS_SHADOWDOM) {
-      const outer = document.body.querySelector('.b');
+      const outer = document.body.querySelector('.a');
       const outerColor = window.getComputedStyle(outer).getPropertyValue('color');
-
-      const inner = scope.shadowRoot.querySelector('.b');
+      const inner = scope.shadowRoot.querySelector('.a');
       const innerColor = window.getComputedStyle(inner).getPropertyValue('color');
-
-      expect(outerColor).toBe('rgb(0, 128, 0)');
-      expect(innerColor).toBe('rgb(255, 0, 0)');
+      expect(outerColor).toBe('rgb(255, 0, 0)');
+      expect(innerColor).toBe('rgb(0, 0, 0)');
     }
 
     cleanup();

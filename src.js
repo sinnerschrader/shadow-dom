@@ -29,15 +29,30 @@ function shadowDom(el) {
         set innerHTML(innerHTML) {
           const doc = parser.parseFromString(innerHTML, 'text/html');
           const styles = [...doc.querySelectorAll('style')];
+          const outer = [...document.querySelectorAll('style')]
+            .filter(s => styles.indexOf(s) === -1)
+            .reduce((rs, s) => {
+              Array.prototype.push.apply(rs, s.sheet.cssRules);
+              return rs;
+            }, []);
 
           const replacements = styles
             .map(style => {
-              const rules = Array.prototype.slice.call(style.sheet.cssRules, 0);
               return {
                 target: style,
-                result: scope(id, rules).join(' ')
+                result: style.textContent,
+                rules: Array.prototype.slice.call(style.sheet.cssRules, 0)
               };
-            });
+            })
+            .map(r => {
+              r.result = scope(r.rules, {id}).join(' ');
+              return r;
+            })
+            /* .map(r => {
+              const rules = parseRules(r.result);
+              r.result = emphasize(rules, {id, doc, outer});
+              return r;
+            }); */
 
           replacements.forEach(replacement => {
             replacement.target.textContent = replacement.result;
@@ -58,6 +73,20 @@ function shadowDom(el) {
     }
   };
 }
+
+/* function emphasize(rules, {id, doc, outer}) {
+  const overrides = rules.map(rule => {
+    const selector = rule.selectorText.replace(`#${id} `, '');
+    const els = Array.prototype.slice.call(doc.querySelectorAll(selector), 0);
+    const overrides = outer
+      .filter(r => els.some(el => matches(el, r.selectorText)))
+      .filter(r => {
+        const propNames = Array.prototype.slice.call(r.style, 0);
+        const importantProps = propNames.filter(propName => r.style.getPropertyPriority(propName));
+        return importantProps.some(prop => priop);
+      });
+  });
+} */
 
 function getAll() {
   return Array.prototype.slice.call(window.getComputedStyle(document.body), 0);
@@ -106,6 +135,32 @@ function interrupt(el) {
   return el;
 }
 
+function matches(el, selector) {
+  if ('matches' in el) {
+    return el.matches(selector);
+  }
+  if ('msMatchesSelector' in el) {
+    return el.msMatchesSelector(selector);
+  }
+  throw new TypeError('Element.prototype.matches is not supported.');
+}
+
+function parseRules(css) {
+  const frame = document.createElement('iframe');
+  document.body.appendChild(frame);
+
+  const doc = frame.contentDocument;
+
+  const tmp = doc.createElement('style');
+  tmp.textContent = css;
+  doc.body.appendChild(tmp);
+
+  const rules = Array.prototype.slice.call(tmp.sheet.cssRules, 0);
+
+  document.body.removeChild(frame);
+  return rules;
+}
+
 function supports(feature) {
   // Use CSS.supports if available
   if ('CSS' in window && 'supports' in CSS) {
@@ -151,7 +206,7 @@ function supports(feature) {
   }
 }
 
-function scope(id, rules) {
+function scope(rules, {id}) {
   return rules.map((rule, index) => {
     switch(rule.type) {
       case CSSRule.STYLE_RULE: {
@@ -161,7 +216,7 @@ function scope(id, rules) {
       }
       case CSSRule.MEDIA_RULE: {
         const mediaRules = Array.prototype.slice.call(rule.cssRules);
-        return `@media ${rule.conditionText} {${scope(id, mediaRules)}}`;
+        return `@media ${rule.conditionText} {${scope(mediaRules, {id})}}`;
       }
       default:
         return rule.cssText;
