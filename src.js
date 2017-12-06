@@ -29,8 +29,8 @@ function shadowDom(el) {
       return {
         set innerHTML(innerHTML) {
           const doc = parser.parseFromString(innerHTML, 'text/html');
-          const styles = [...doc.querySelectorAll('style')];
-          const outer = [...document.querySelectorAll('style')]
+          const styles = Array.prototype.slice.call(doc.querySelectorAll('style'), 0);
+          const outer = Array.prototype.slice.call(document.querySelectorAll('style'), 0)
             .filter(s => styles.indexOf(s) === -1)
             .reduce((rs, s) => {
               Array.prototype.push.apply(rs, s.sheet.cssRules);
