@@ -292,7 +292,7 @@ function scope(rules, {effects, id}) {
   return rules.map((rule, index) => {
     switch(rule.type) {
       case CSSRule.STYLE_RULE: {
-        // TODO: simplify this, perhaps a faceced in front of CSSRule is in order
+        // TODO: simplify this, perhaps a facade in front of CSSRule is in order
         const affectedPropNames = effects
           .reduce((acc, effect) => {
             const rs = effect.affectedRules.filter(a => a.rule === rule);
