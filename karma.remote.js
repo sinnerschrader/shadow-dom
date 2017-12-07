@@ -123,6 +123,13 @@ module.exports = config => {
       }
     },
 
-    browsers: ['bs_chrome', 'bs_firefox', 'bs_safari', 'bs_ie', 'bs_edge']
+    browsers: [
+      'bs_chrome',
+      'bs_firefox',
+      'bs_safari',
+      'bs_ie',
+      /* Edge disabled for the time being due to timeout */
+      /* 'bs_edge' */
+    ]
   })
 }
