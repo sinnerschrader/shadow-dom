@@ -184,7 +184,7 @@ function interrupt(el, {parent, id}) {
       return `#${id} ${importantRule.selectorText} {
         ${propNames.map(prop => `${prop}: ${initialFor(prop)}!important;`).join('\n')}
       }`;
-    });
+    }).join('\n');
 
     parent.insertBefore(shield, parent.firstChild);
   }
