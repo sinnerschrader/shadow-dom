@@ -1,3 +1,5 @@
+const os = require('os');
+
 process.env.CHROME_BIN = require('puppeteer').executablePath();
 
 module.exports = config => {
@@ -66,6 +68,33 @@ module.exports = config => {
       },
     },
 
-    browsers: ['ChromeHeadless', 'FirefoxHeadless', 'Firefox']
+    browsers: [
+      {
+        name: 'ChromeHeadless',
+        test() {
+          return true;
+        }
+      },
+      {
+        name: 'FirefoxHeadless',
+        test() {
+          return true;
+        }
+      },
+      {
+        name: 'Safari',
+        test() {
+          return os.platform() === 'darwin'
+        }
+      },
+      {
+        name: 'IE',
+        test() {
+          return os.platform() === 'win32'
+        }
+      }
+    ]
+    .filter(browser => browser.test())
+    .map(browser => browser.name)
   })
 }
