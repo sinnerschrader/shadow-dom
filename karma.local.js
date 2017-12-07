@@ -68,6 +68,7 @@ module.exports = config => {
       },
     },
 
+    browserDisconnectTimeout: 10000,
     browsers: [
       {
         name: 'ChromeHeadless',
@@ -82,15 +83,21 @@ module.exports = config => {
         }
       },
       {
+        name: 'Firefox',
+        test() {
+          return process.env.HEADLESS === 'false';
+        }
+      },
+      {
         name: 'Safari',
         test() {
-          return os.platform() === 'darwin'
+          return os.platform() === 'darwin' && process.env.HEADLESS === 'false'
         }
       },
       {
         name: 'IE',
         test() {
-          return os.platform() === 'win32'
+          return os.platform() === 'win32' && process.env.HEADLESS === 'false'
         }
       }
     ]
