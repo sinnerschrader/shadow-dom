@@ -123,12 +123,6 @@ module.exports = config => {
       }
     },
 
-    browsers: ['bs_chrome', 'bs_firefox', 'bs_safari', 'bs_ie', 'bs_edge'],
-
-    // to avoid DISCONNECTED messages
-    browserDisconnectTimeout : 10000, // default 2000
-    browserDisconnectTolerance : 1, // default 0
-    browserNoActivityTimeout : 4 * 60 * 1000, //default 10000
-    captureTimeout : 4 * 60 * 1000 //default 60000
+    browsers: ['bs_chrome', 'bs_firefox', 'bs_safari', 'bs_ie', 'bs_edge']
   })
 }
