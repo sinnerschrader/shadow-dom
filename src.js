@@ -293,7 +293,7 @@ function scope(rules, {effects, id}) {
       }
       case CSSRule.MEDIA_RULE: {
         const mediaRules = Array.prototype.slice.call(rule.cssRules);
-        return `@media ${getCondition(rule, 'media')} {${scope(mediaRules, {id})}}`;
+        return `@media ${getCondition(rule, 'media')} {${scope(mediaRules, {effects, id})}}`;
       }
       default:
         return rule.cssText;
