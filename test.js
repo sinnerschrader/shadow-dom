@@ -52,6 +52,17 @@ it('respects styling of inner scope', () => {
   cleanup();
 });
 
+it('scopes against high specificity styling', () => {
+  const {scope, cleanup} = fixture('high-specificity-scope');
+
+  if (!HAS_SHADOWDOM) {
+    const a = scope.shadowRoot.querySelector('.a');
+    const color = window.getComputedStyle(a).getPropertyValue('color');
+    expect(color).toBe('rgb(0, 128, 0)');
+  }
+
+  cleanup();
+})
 
 it('prevents bleeding', () => {
   const {scope, cleanup} = fixture('bleeding-scope');
@@ -145,7 +156,19 @@ it('preserves specifity relations as found', () => {
     expect(['rgba(0, 0, 0, 0)', 'transparent']).toContain(bBack);
   }
 
-  // cleanup();
+  cleanup();
+});
+
+it('protects against !important rules with higher specificity', () => {
+  const {scope, cleanup} = fixture('important-high-specificity');
+
+  if (!HAS_SHADOWDOM) {
+    const a = scope.shadowRoot.querySelector('.a');
+    const color = window.getComputedStyle(a).getPropertyValue('color');
+    expect(color).toBe('rgb(0, 128, 0)');
+  }
+
+  cleanup();
 });
 
 function fixture(name) {

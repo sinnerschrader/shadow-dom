@@ -1,4 +1,5 @@
 import shortid from 'shortid';
+import specificity from 'specificity';
 
 const parser = new DOMParser();
 const serializer = new XMLSerializer();
@@ -17,7 +18,23 @@ function shadowDom(el) {
   el.innerHTML = '';
 
   const id = shortid.generate();
-  const {shadowRoot, shieldRules} = interrupt(document.createElement('div'), {id, parent: el});
+
+  const outer = Array.prototype.slice.call(document.querySelectorAll('style'), 0)
+    .reduce((rs, s) => {
+      Array.prototype.push.apply(rs, s.sheet.cssRules);
+      return rs;
+    }, []);
+
+  const selectors = outer.reduce((acc, o) => {
+    const s = o.selectorText.split(', ').map(s => s.trim());
+    Array.prototype.push.apply(acc, s);
+    return acc;
+  }, []);
+
+  const highest = getHighestSpecificity(selectors);
+  const prefixCount = Math.max(Math.ceil(highest / 100), 1);
+
+  const {shadowRoot, shieldRules} = interrupt(document.createElement('div'), {id, prefixCount, parent: el});
 
   shadowRoot.id = id;
   shadowRoot.innerHTML = '';
@@ -29,21 +46,16 @@ function shadowDom(el) {
       return {
         set innerHTML(innerHTML) {
           const doc = parser.parseFromString(innerHTML, 'text/html');
-          const styles = Array.prototype.slice.call(doc.querySelectorAll('style'), 0);
+
+          const styles = Array.prototype.slice.call(doc.querySelectorAll('style'), 0)
+            .filter((style) => !style.getAttribute('data-shadow-dom'));
 
           const inner = flattenRules(styles
-              .filter((style) => !style.getAttribute('data-shadow-dom'))
-              .reduce((rs, s) => {
-                Array.prototype.push.apply(rs, s.sheet.cssRules);
-                return rs;
-              }, []));
-
-          const outer = Array.prototype.slice.call(document.querySelectorAll('style'), 0)
-            .filter(s => styles.indexOf(s) === -1)
+            .filter((style) => !style.getAttribute('data-shadow-dom'))
             .reduce((rs, s) => {
               Array.prototype.push.apply(rs, s.sheet.cssRules);
               return rs;
-            }, []);
+            }, []));
 
           // TODO: Handle CSSGroupingRule
           const effects = shieldRules
@@ -76,7 +88,7 @@ function shadowDom(el) {
               };
             })
             .map(r => {
-              r.result = scope(r.rules, {id, effects}).join(' ');
+              r.result = scope(r.rules, {id, effects, prefixCount}).join(' ');
               return r;
             });
 
@@ -122,6 +134,15 @@ function getAll() {
   return Array.prototype.slice.call(window.getComputedStyle(document.body), 0);
 }
 
+function getHighestSpecificity(selectors) {
+  if (selectors.length === 0) {
+    return 0;
+  }
+
+  const spec = specificity.calculate(selectors.sort(specificity.compare)[0])[0].specificityArray;
+  return parseInt(spec.join(''), 10);
+}
+
 function getCondition(rule, keyword) {
   if ('conditionText' in rule) {
     return rule.conditionText;
@@ -158,7 +179,7 @@ function getValue() {
   return (prop) => styles[prop];
 }
 
-function interrupt(el, {parent, id}) {
+function interrupt(el, {parent, prefixCount, id}) {
   const all = supports('all');
   const initial = supports('initial');
 
@@ -170,7 +191,7 @@ function interrupt(el, {parent, id}) {
   style.setAttribute('data-shadow-dom', true);
 
   style.textContent = `
-    #${id} {
+    ${repeat(`#${id}`, prefixCount)} {
       ${props.map(prop => `${prop}: ${initial ? 'initial' : initialFor(prop)}`).join(';\n')}
     }
   `;
@@ -243,6 +264,18 @@ function prefixSelectors(selectorText, prefix) {
   return selectorText.split(',').map(s => `${prefix} ${s.trim()}`).join(', ');
 }
 
+function repeat(string, count) {
+  if (typeof String.prototype.repeat === 'function') {
+    return string.repeat(count);
+  }
+
+  let result = '';
+  for (let i = 0; i < count; i++) {
+    result += string;
+  }
+  return result;
+}
+
 function supports(feature) {
   // Use CSS.supports if available
   if ('CSS' in window && 'supports' in CSS) {
@@ -288,7 +321,10 @@ function supports(feature) {
   }
 }
 
-function scope(rules, {effects, id}) {
+function scope(...args) {
+  const [, context] = args;
+  const [rules, {effects, id, prefixCount}] = args;
+
   return rules.map((rule, index) => {
     switch(rule.type) {
       case CSSRule.STYLE_RULE: {
@@ -308,11 +344,13 @@ function scope(rules, {effects, id}) {
           const priority = affectedPropNames.indexOf(propName) > -1 ? '!important' : '';
           return `${propName}: ${rule.style.getPropertyValue(propName)}${priority};`;
         }).join('\n');
-        return `${prefixSelectors(rule.selectorText, `#${id}`)} {${body}}`;
+        const prefixOffset = affectedPropNames.length > 0 ? 1 : 0;
+        const prefix = repeat(`#${id}`, prefixCount + prefixOffset);
+        return `${prefixSelectors(rule.selectorText, prefix)} {${body}}`;
       }
       case CSSRule.MEDIA_RULE: {
         const mediaRules = Array.prototype.slice.call(rule.cssRules);
-        return `@media ${getCondition(rule, 'media')} {${scope(mediaRules, {effects, id})}}`;
+        return `@media ${getCondition(rule, 'media')} {${scope(mediaRules, context)}}`;
       }
       default:
         return rule.cssText;
@@ -321,6 +359,6 @@ function scope(rules, {effects, id}) {
 }
 
 function unprefixSelectors(selectorText, prefix) {
-  const reg = new RegExp(`^${prefix} `, 'i');
+  const reg = new RegExp(`^(?:(?:${prefix})+) `, 'i');
   return selectorText.split(',').map(s => s.trim().replace(reg, '')).join(' ');
 }
