@@ -36,7 +36,7 @@ function shadowDom(el) {
 
   const {shadowRoot, shieldRules} = interrupt(document.createElement('div'), {id, prefixCount, parent: el});
 
-  shadowRoot.id = id;
+  shadowRoot.setAttribute('id', id);
   shadowRoot.innerHTML = '';
 
   el.appendChild(shadowRoot);
@@ -60,7 +60,8 @@ function shadowDom(el) {
           // TODO: Handle CSSGroupingRule
           const effects = shieldRules
             .map(affectingRule => {
-              const affectingSelector = unprefixSelectors(affectingRule.selectorText, `#${id}`);
+              const prefix = range(prefixCount, `#${id}`).join(' + ');
+              const affectingSelector = unprefixSelectors(affectingRule.selectorText, prefix);
               const affectedEls = Array.prototype.slice.call(doc.querySelectorAll(affectingSelector), 0);
               const affectedPropNames = Array.prototype.slice.call(affectingRule.style, 0);
 
@@ -190,8 +191,10 @@ function interrupt(el, {parent, prefixCount, id}) {
   style.setAttribute('data-shadow-dom-initial-id', id);
   style.setAttribute('data-shadow-dom', true);
 
+  const prefix = range(prefixCount, `#${id}`).join(' + ');
+
   style.textContent = `
-    ${repeat(`#${id}`, prefixCount)} {
+    ${prefix} {
       ${props.map(prop => `${prop}: ${initial ? 'initial' : initialFor(prop)}`).join(';\n')}
     }
   `;
@@ -218,7 +221,7 @@ function interrupt(el, {parent, prefixCount, id}) {
     // TODO: handle CSSGroupingRules properly
     shield.textContent = importantRules.map(importantRule => {
       const propNames = Array.prototype.slice.call(importantRule.style, 0);
-      return `${prefixSelectors(importantRule.selectorText, `#${id}`)} {
+      return `${prefixSelectors(importantRule.selectorText, prefix)} {
         ${propNames.map(prop => `${prop}: ${initialFor(prop)}!important;`).join('\n')}
       }`;
     }).join('\n');
@@ -227,6 +230,12 @@ function interrupt(el, {parent, prefixCount, id}) {
   }
 
   parent.insertBefore(style, parent.firstChild);
+
+  for (let i = 0; i < prefixCount; i++) {
+    const e = document.createElement('div');
+    e.setAttribute('id', id);
+    parent.appendChild(e);
+  }
 
   return {
     shadowRoot: el,
@@ -262,6 +271,20 @@ function parseRules(css) {
 
 function prefixSelectors(selectorText, prefix) {
   return selectorText.split(',').map(s => `${prefix} ${s.trim()}`).join(', ');
+}
+
+function range(count, fill) {
+  const result = [];
+
+  for (let i = 0; i < count; i++) {
+    if (typeof fill === 'undefined') {
+      result.push(i);
+    } else {
+      result.push(fill);
+    }
+  }
+
+  return result;
 }
 
 function repeat(string, count) {
@@ -345,7 +368,9 @@ function scope(...args) {
           return `${propName}: ${rule.style.getPropertyValue(propName)}${priority};`;
         }).join('\n');
         const prefixOffset = affectedPropNames.length > 0 ? 1 : 0;
-        const prefix = repeat(`#${id}`, prefixCount + prefixOffset);
+
+        const prefix = range(prefixCount + prefixOffset, `#${id}`).join(' + ');
+
         return `${prefixSelectors(rule.selectorText, prefix)} {${body}}`;
       }
       case CSSRule.MEDIA_RULE: {
@@ -359,6 +384,5 @@ function scope(...args) {
 }
 
 function unprefixSelectors(selectorText, prefix) {
-  const reg = new RegExp(`^(?:(?:${prefix})+) `, 'i');
-  return selectorText.split(',').map(s => s.trim().replace(reg, '')).join(' ');
+  return selectorText.split(',').map(s => s.replace(prefix, '').trim()).join(' ');
 }
