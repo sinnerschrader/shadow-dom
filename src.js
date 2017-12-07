@@ -118,6 +118,7 @@ function flattenRules(rules) {
 }
 
 function getAll() {
+  // TODO: filter some props as per spec
   return Array.prototype.slice.call(window.getComputedStyle(document.body), 0);
 }
 
