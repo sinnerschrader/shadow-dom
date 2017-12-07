@@ -48,7 +48,7 @@ function shadowDom(el) {
           // TODO: Handle CSSGroupingRule
           const effects = shieldRules
             .map(affectingRule => {
-              const affectingSelector = affectingRule.selectorText.replace(`#${id} `, '');
+              const affectingSelector = unprefixSelectors(affectingRule.selectorText, `#${id}`);
               const affectedEls = Array.prototype.slice.call(doc.querySelectorAll(affectingSelector), 0);
               const affectedPropNames = Array.prototype.slice.call(affectingRule.style, 0);
 
@@ -121,6 +121,21 @@ function getAll() {
   return Array.prototype.slice.call(window.getComputedStyle(document.body), 0);
 }
 
+function getCondition(rule, keyword) {
+  if ('conditionText' in rule) {
+    return rule.conditionText;
+  }
+
+  const reg = new RegExp(`@${keyword}\s?([^{]+)\s?`, 'i');
+  const result = reg.exec(rule.cssText);
+
+  if (result === null) {
+    throw new TypeError(`Could not parse conditionText from ${rule.cssText}`);
+  }
+
+  return result[1].trim();
+}
+
 function getValue() {
   const frame = document.createElement('iframe');
   document.body.appendChild(frame);
@@ -181,7 +196,7 @@ function interrupt(el, {parent, id}) {
     // TODO: handle CSSGroupingRules properly
     shield.textContent = importantRules.map(importantRule => {
       const propNames = Array.prototype.slice.call(importantRule.style, 0);
-      return `#${id} ${importantRule.selectorText} {
+      return `${prefixSelectors(importantRule.selectorText, `#${id}`)} {
         ${propNames.map(prop => `${prop}: ${initialFor(prop)}!important;`).join('\n')}
       }`;
     }).join('\n');
@@ -221,6 +236,10 @@ function parseRules(css) {
 
   document.body.removeChild(frame);
   return rules;
+}
+
+function prefixSelectors(selectorText, prefix) {
+  return selectorText.split(',').map(s => `${prefix} ${s.trim()}`).join(', ');
 }
 
 function supports(feature) {
@@ -284,12 +303,11 @@ function scope(rules, {effects, id}) {
           }, []);
 
         const propNames = Array.prototype.slice.call(rule.style, 0);
-        const selector = [`#${id}`, rule.selectorText].join(' ');
         const body = propNames.map(propName => {
           const priority = affectedPropNames.indexOf(propName) > -1 ? '!important' : '';
           return `${propName}: ${rule.style.getPropertyValue(propName)}${priority};`;
         }).join('\n');
-        return `${selector} {${body}}`;
+        return `${prefixSelectors(rule.selectorText, `#${id}`)} {${body}}`;
       }
       case CSSRule.MEDIA_RULE: {
         const mediaRules = Array.prototype.slice.call(rule.cssRules);
@@ -301,17 +319,7 @@ function scope(rules, {effects, id}) {
   });
 }
 
-function getCondition(rule, keyword) {
-  if ('conditionText' in rule) {
-    return rule.conditionText;
-  }
-
-  const reg = new RegExp(`@${keyword}\s?([^{]+)\s?`, 'i');
-  const result = reg.exec(rule.cssText);
-
-  if (result === null) {
-    throw new TypeError(`Could not parse conditionText from ${rule.cssText}`);
-  }
-
-  return result[1].trim();
+function unprefixSelectors(selectorText, prefix) {
+  const reg = new RegExp(`^${prefix} `, 'i');
+  return selectorText.split(',').map(s => s.trim().replace(reg, '')).join(' ');
 }
