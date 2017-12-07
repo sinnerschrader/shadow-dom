@@ -100,16 +100,31 @@ it('prevents bleeding via complex media queries', () => {
 it('resets !important rules', () => {
   const {scope, cleanup} = fixture('important-outer');
 
-    if (!HAS_SHADOWDOM) {
-      const outer = document.body.querySelector('p');
-      const outerColor = window.getComputedStyle(outer).getPropertyValue('color');
-      const inner = scope.shadowRoot.querySelector('p');
-      const innerColor = window.getComputedStyle(inner).getPropertyValue('color');
-      expect(outerColor).toBe('rgb(255, 0, 0)');
-      expect(innerColor).toBe('rgb(0, 0, 0)');
-    }
+  if (!HAS_SHADOWDOM) {
+    const outer = document.body.querySelector('p');
+    const outerColor = window.getComputedStyle(outer).getPropertyValue('color');
+    const inner = scope.shadowRoot.querySelector('p');
+    const innerColor = window.getComputedStyle(inner).getPropertyValue('color');
+    expect(outerColor).toBe('rgb(255, 0, 0)');
+    expect(innerColor).toBe('rgb(0, 0, 0)');
+  }
 
-    // cleanup();
+  cleanup();
+});
+
+it('uses scoped style for !important props', () => {
+  const {scope, cleanup} = fixture('important-inner');
+
+  if (!HAS_SHADOWDOM) {
+    const outer = document.body.querySelector('p');
+    const outerColor = window.getComputedStyle(outer).getPropertyValue('color');
+    const inner = scope.shadowRoot.querySelector('p');
+    const innerColor = window.getComputedStyle(inner).getPropertyValue('color');
+    expect(outerColor).toBe('rgb(255, 0, 0)');
+    expect(innerColor).toBe('rgb(0, 128, 0)');
+  }
+
+  cleanup();
 });
 
 function fixture(name) {
