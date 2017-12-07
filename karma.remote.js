@@ -128,8 +128,7 @@ module.exports = config => {
       'bs_firefox',
       'bs_safari',
       'bs_ie',
-      /* Edge disabled for the time being due to timeout */
-      /* 'bs_edge' */
+      'bs_edge'
     ]
   })
 }
