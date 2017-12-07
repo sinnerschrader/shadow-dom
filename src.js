@@ -177,7 +177,12 @@ function getValue() {
   }, {});
 
   document.body.removeChild(frame);
-  return (prop) => styles[prop];
+  return (prop) => {
+    if (prop === 'all') {
+      return 'initial';
+    }
+    return styles[prop]
+  };
 }
 
 function interrupt(el, {parent, prefixCount, id}) {
@@ -193,9 +198,13 @@ function interrupt(el, {parent, prefixCount, id}) {
 
   const prefix = range(prefixCount, `#${id}`).join(' + ');
 
+  // Edge 15..17 is currently the only browser that
+  // does *NOT* support "all" but "initial".
+  // Turns out initial is slow to an extent that it froze
+  // automated test runs, which does not happen for explicit values
   style.textContent = `
     ${prefix} {
-      ${props.map(prop => `${prop}: ${initial ? 'initial' : initialFor(prop)}`).join(';\n')}
+      ${props.map(prop => `${prop}: ${/*initial ? 'initial' : */initialFor(prop)}`).join(';\n')}
     }
   `;
 
