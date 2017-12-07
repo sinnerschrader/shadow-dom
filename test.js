@@ -112,7 +112,7 @@ it('resets !important rules', () => {
   cleanup();
 });
 
-it('uses scoped style for !important props', () => {
+fit('uses scoped style for !important props', () => {
   const {scope, cleanup} = fixture('important-inner');
 
   if (!HAS_SHADOWDOM) {
@@ -124,7 +124,7 @@ it('uses scoped style for !important props', () => {
     expect(innerColor).toBe('rgb(0, 128, 0)');
   }
 
-  cleanup();
+  // cleanup();
 });
 
 function fixture(name) {

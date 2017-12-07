@@ -17,7 +17,7 @@ function shadowDom(el) {
   el.innerHTML = '';
 
   const id = shortid.generate();
-  const {shadowRoot} = interrupt(document.createElement('div'), {id, parent: el});
+  const {shadowRoot, shieldRules} = interrupt(document.createElement('div'), {id, parent: el});
 
   shadowRoot.id = id;
   shadowRoot.innerHTML = '';
@@ -30,12 +30,42 @@ function shadowDom(el) {
         set innerHTML(innerHTML) {
           const doc = parser.parseFromString(innerHTML, 'text/html');
           const styles = Array.prototype.slice.call(doc.querySelectorAll('style'), 0);
+
+          const inner = flattenRules(styles
+              .filter((style) => !style.getAttribute('data-shadow-dom'))
+              .reduce((rs, s) => {
+                Array.prototype.push.apply(rs, s.sheet.cssRules);
+                return rs;
+              }, []));
+
           const outer = Array.prototype.slice.call(document.querySelectorAll('style'), 0)
             .filter(s => styles.indexOf(s) === -1)
             .reduce((rs, s) => {
               Array.prototype.push.apply(rs, s.sheet.cssRules);
               return rs;
             }, []);
+
+          // TODO: Handle CSSGroupingRule
+          const effects = shieldRules
+            .map(affectingRule => {
+              const affectingSelector = affectingRule.selectorText.replace(`#${id} `, '');
+              const affectedEls = Array.prototype.slice.call(doc.querySelectorAll(affectingSelector), 0);
+              const affectedPropNames = Array.prototype.slice.call(affectingRule.style, 0);
+
+              return {
+                affectingRule,
+                affectedRules: inner
+                  .map(rule => {
+                    return {
+                      rule,
+                      props: affectedPropNames.filter(propName => Boolean(rule.style.getPropertyValue(propName))),
+                      els: affectedEls.filter(el => matches(el, rule.selectorText))
+                    };
+                  })
+                  .filter(affected => affected.props.length > 0 && affected.els.length > 0)
+              };
+            })
+            .filter(effect => effect.affectedRules.length > 0);
 
           const replacements = styles
             .map(style => {
@@ -46,14 +76,9 @@ function shadowDom(el) {
               };
             })
             .map(r => {
-              r.result = scope(r.rules, {id}).join(' ');
+              r.result = scope(r.rules, {id, effects}).join(' ');
               return r;
-            })
-            /* .map(r => {
-              const rules = parseRules(r.result);
-              r.result = emphasize(rules, {id, doc, outer});
-              return r;
-            }); */
+            });
 
           replacements.forEach(replacement => {
             replacement.target.textContent = replacement.result;
@@ -74,20 +99,6 @@ function shadowDom(el) {
     }
   };
 }
-
-/* function emphasize(rules, {id, doc, outer}) {
-  const overrides = rules.map(rule => {
-    const selector = rule.selectorText.replace(`#${id} `, '');
-    const els = Array.prototype.slice.call(doc.querySelectorAll(selector), 0);
-    const overrides = outer
-      .filter(r => els.some(el => matches(el, r.selectorText)))
-      .filter(r => {
-        const propNames = Array.prototype.slice.call(r.style, 0);
-        const importantProps = propNames.filter(propName => r.style.getPropertyPriority(propName));
-        return importantProps.some(prop => priop);
-      });
-  });
-} */
 
 function flattenRules(rules) {
   return rules.reduce((acc, r) => {
@@ -139,7 +150,8 @@ function interrupt(el, {parent, id}) {
   const initialFor = getValue();
 
   const style = document.createElement('style');
-  style.setAttribute('data-shadow-dom-id', id);
+  style.setAttribute('data-shadow-dom-initial-id', id);
+  style.setAttribute('data-shadow-dom', true);
 
   style.textContent = `
     #${id} {
@@ -153,26 +165,35 @@ function interrupt(el, {parent, id}) {
       return rules;
     }, []);
 
+  // TODO: handle CSSGroupingRules properly
   const importantRules = flattenRules(allRules)
     .filter((rule) => {
       const propNames = Array.prototype.slice.call(rule.style, 0);
       return propNames.some(propName => rule.style.getPropertyPriority(propName));
     }, []);
 
+  const shield = importantRules.length > 0 ? document.createElement('style') : null;
+
   if (importantRules.length > 0) {
-    style.textContent += importantRules.map(importantRule => {
+    shield.setAttribute('data-shadow-dom-shield-id', id);
+    shield.setAttribute('data-shadow-dom', true);
+
+    // TODO: handle CSSGroupingRules properly
+    shield.textContent = importantRules.map(importantRule => {
       const propNames = Array.prototype.slice.call(importantRule.style, 0);
       return `#${id} ${importantRule.selectorText} {
         ${propNames.map(prop => `${prop}: ${initialFor(prop)}!important;`).join('\n')}
       }`;
     });
+
+    parent.insertBefore(shield, parent.firstChild);
   }
 
-  el.classList.add(id);
   parent.insertBefore(style, parent.firstChild);
 
   return {
-    shadowRoot: el
+    shadowRoot: el,
+    shieldRules: shield === null ? [] : Array.prototype.slice.call(shield.sheet.cssRules, 0)
   };
 }
 
@@ -247,12 +268,27 @@ function supports(feature) {
   }
 }
 
-function scope(rules, {id}) {
+function scope(rules, {effects, id}) {
   return rules.map((rule, index) => {
     switch(rule.type) {
       case CSSRule.STYLE_RULE: {
+        // TODO: simplify this, perhaps a faceced in front of CSSRule is in order
+        const affectedPropNames = effects
+          .reduce((acc, effect) => {
+            const rs = effect.affectedRules.filter(a => a.rule === rule);
+            Array.prototype.push.apply(acc, rs.reduce((a, r) => {
+              Array.prototype.push.apply(a, r.props);
+              return a;
+            }, []));
+            return acc;
+          }, []);
+
+        const propNames = Array.prototype.slice.call(rule.style, 0);
         const selector = [`#${id}`, rule.selectorText].join(' ');
-        const body = rule.style.cssText;
+        const body = propNames.map(propName => {
+          const priority = affectedPropNames.indexOf(propName) > -1 ? '!important' : '';
+          return `${propName}: ${rule.style.getPropertyValue(propName)}${priority};`;
+        }).join('\n');
         return `${selector} {${body}}`;
       }
       case CSSRule.MEDIA_RULE: {
