@@ -127,6 +127,26 @@ it('uses scoped style for !important props', () => {
   cleanup();
 });
 
+it('preserves specifity relations as found', () => {
+  const {scope, cleanup} = fixture('important-inner-tree');
+
+  if (!HAS_SHADOWDOM) {
+    const a = scope.shadowRoot.querySelector('.a');
+    const b = scope.shadowRoot.querySelector('.b');
+    const aColor = window.getComputedStyle(a).getPropertyValue('color');
+    const aBack = window.getComputedStyle(a).getPropertyValue('background-color');
+    const bColor = window.getComputedStyle(b).getPropertyValue('color');
+    const bBack = window.getComputedStyle(b).getPropertyValue('background-color');
+
+    expect(aColor).toBe('rgb(0, 128, 0)');
+    expect(bColor).toBe('rgb(255, 0, 0)');
+    expect(aBack).toBe('rgba(0, 0, 0, 0)');
+    expect(bBack).toBe('rgba(0, 0, 0, 0)');
+  }
+
+  // cleanup();
+});
+
 function fixture(name) {
   const html = require(`./fixtures/${name}.html`);
   return setup(html);
