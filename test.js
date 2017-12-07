@@ -138,10 +138,11 @@ it('preserves specifity relations as found', () => {
     const bColor = window.getComputedStyle(b).getPropertyValue('color');
     const bBack = window.getComputedStyle(b).getPropertyValue('background-color');
 
+
     expect(aColor).toBe('rgb(0, 128, 0)');
     expect(bColor).toBe('rgb(255, 0, 0)');
-    expect(aBack).toBe('rgba(0, 0, 0, 0)');
-    expect(bBack).toBe('rgba(0, 0, 0, 0)');
+    expect(['rgba(0, 0, 0, 0)', 'transparent']).toContain(aBack);
+    expect(['rgba(0, 0, 0, 0)', 'transparent']).toContain(bBack);
   }
 
   // cleanup();
