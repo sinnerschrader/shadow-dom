@@ -1,0 +1,26 @@
+<div id="a">
+  <div id="b">
+    <div id="c">
+      <p class="a">
+        This should be red
+      </p>
+      <div class="shadow-dom">
+        <style>
+          .a {
+            color: green;
+          }
+        </style>
+        <div>
+          <p class="a">
+            This should be green
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+  .a.a {
+    color: red!important;
+  }
+</style>

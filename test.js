@@ -171,6 +171,18 @@ it('protects against !important rules with higher specificity', () => {
   cleanup();
 });
 
+it('protects against !important rules with escalating specificity', () => {
+  const {scope, cleanup} = fixture('important-id-specificity');
+
+  if (!HAS_SHADOWDOM) {
+    const a = scope.shadowRoot.querySelector('.a');
+    const color = window.getComputedStyle(a).getPropertyValue('color');
+    expect(color).toBe('rgb(0, 128, 0)');
+  }
+
+  cleanup();
+});
+
 function fixture(name) {
   const html = require(`./fixtures/${name}.html`);
   return setup(html);
