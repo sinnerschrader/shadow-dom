@@ -1,0 +1,25 @@
+<style>
+    .b {
+      color: green;
+    }
+  </style>
+  <div class="b">
+    <p>
+      This should be green
+    </p>
+    <div class="shadow-dom">
+      <p class="b">
+        This should be red or blue
+      </p>
+      <style>
+        .b {
+          color: blue;
+        }
+        @supports (color: red) {
+          .b {
+            color: red;
+          }
+        }
+      </style>
+    </div>
+  </div>

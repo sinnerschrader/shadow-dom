@@ -108,6 +108,23 @@ it('prevents bleeding via complex media queries', () => {
   cleanup();
 });
 
+it('prevents bleeding via supports queries', () => {
+  const {scope, cleanup} = fixture('bleeding-scope-supports-basic');
+
+  if (!HAS_SHADOWDOM) {
+    const outer = document.body.querySelector('.b');
+    const outerColor = window.getComputedStyle(outer).getPropertyValue('color');
+
+    const inner = scope.shadowRoot.querySelector('.b');
+    const innerColor = window.getComputedStyle(inner).getPropertyValue('color');
+    const expected = (window.CSS && ('supports' in CSS)) ? 'rgb(255, 0, 0)' : 'rgb(0, 0, 255)';
+
+    expect(innerColor).toBe(expected);
+  }
+
+  cleanup();
+});
+
 it('resets !important rules', () => {
   const {scope, cleanup} = fixture('important-outer');
 

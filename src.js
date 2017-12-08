@@ -386,6 +386,10 @@ function scope(...args) {
         const mediaRules = Array.prototype.slice.call(rule.cssRules);
         return `@media ${getCondition(rule, 'media')} {${scope(mediaRules, context)}}`;
       }
+      case CSSRule.SUPPORTS_RULE: {
+        const mediaRules = Array.prototype.slice.call(rule.cssRules);
+        return `@supports ${getCondition(rule, 'supports')} {${scope(mediaRules, context)}}`;
+      }
       default:
         return rule.cssText;
     }
