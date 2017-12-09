@@ -7,6 +7,21 @@
     "test": "karma start karma.local.js",
     "test:remote": "karma start karma.remote.js"
   },
+  "babel": {
+    "presets": [
+      [
+        "env",
+        {
+          "targets": {
+            "browsers": [
+              "last 2 versions",
+              "ie >= 11"
+            ]
+          }
+        }
+      ]
+    ]
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/sinnerschrader/shadow-dom.git"
@@ -42,23 +57,7 @@
     "raw-loader": "^0.5.1",
     "webpack": "^3.8.0"
   },
-  "babel": {
-    "presets": [
-      [
-        "env",
-        {
-          "targets": {
-            "browsers": [
-              "last 2 versions",
-              "ie >= 11"
-            ]
-          }
-        }
-      ]
-    ]
-  },
   "dependencies": {
-    "postcss": "^6.0.14",
     "shortid": "^2.2.8",
     "specificity": "^0.3.2"
   }

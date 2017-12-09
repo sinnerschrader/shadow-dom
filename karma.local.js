@@ -73,13 +73,19 @@ module.exports = config => {
       {
         name: 'ChromeHeadless',
         test() {
-          return true;
+          return process.env.HEADLESS !== 'false';
+        }
+      },
+      {
+        name: 'Chrome',
+        test() {
+          return process.env.HEADLESS !== 'false';
         }
       },
       {
         name: 'FirefoxHeadless',
         test() {
-          return true;
+          return process.env.HEADLESS !== 'false';
         }
       },
       {
