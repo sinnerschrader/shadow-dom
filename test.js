@@ -1,4 +1,4 @@
-import shadowDom from './src';
+import {shadowDom} from './src';
 
 const HAS_SHADOWDOM = ('attachShadow' in document.createElement('div'));
 
