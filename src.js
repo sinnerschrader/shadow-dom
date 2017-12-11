@@ -25,10 +25,7 @@ export function shadowDom(el) {
       }, [])
   );
 
-  const selectors = getSelectors(outerRules);
-
-  const highest = getHighestSpecificity(selectors);
-  const prefixCount = Math.max(Math.ceil(highest / 100), 1);
+  const prefixCount = Math.max(Math.ceil(getHighestSpecificity(getSelectors(outerRules)) / 100), 1);
 
   const {shadowRoot, shieldRules} = interrupt(document.createElement('div'), {id, noop, prefixCount, parent: el});
 
@@ -276,7 +273,6 @@ function wrapWithParents(content, rule) {
 
   return result;
 }
-
 
 function matches(el, selector) {
   if ('matches' in el) {
