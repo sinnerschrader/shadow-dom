@@ -55,7 +55,6 @@ function shadowDom(el) {
               return rs;
             }, []));
 
-          // TODO: Handle CSSGroupingRule
           const effects = flattenRules(shieldRules)
             .map(affectingRule => {
               const prefix = `[data-shadow-dom-root="${id}"]${range(prefixCount, `:not(#${noop})`).join('')}`;
@@ -424,5 +423,5 @@ function scope(...args) {
 }
 
 function unprefixSelectors(selectorText, prefix) {
-  return selectorText.split(',').map(s => s.replace(prefix, '').trim()).join(' ');
+  return selectorText.replace(/'/g, '"').split(',').map(s => s.replace(prefix, '').trim()).join(' ');
 }
