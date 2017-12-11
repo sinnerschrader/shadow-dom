@@ -79,7 +79,7 @@ module.exports = config => {
       {
         name: 'Chrome',
         test() {
-          return process.env.HEADLESS !== 'false';
+          return process.env.HEADLESS === 'false';
         }
       },
       {
