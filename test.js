@@ -2,10 +2,6 @@ import shadowDom from './src';
 
 const HAS_SHADOWDOM = ('attachShadow' in document.createElement('div'));
 
-afterEach(() => {
-  viewport.reset();
-});
-
 it('should exist', () => {
     expect(shadowDom).toBeDefined();
 });
@@ -217,6 +213,7 @@ it('protects from !important rules in media queries <= 500px', () => {
     expect(innerColor).toBe('rgb(0, 128, 0)');
   }
 
+  viewport.reset();
   cleanup();
 });
 
@@ -233,6 +230,7 @@ it('protects from !important rules in media queries > 500px', () => {
     expect(innerColor).toBe('rgb(0, 0, 255)');
   }
 
+  viewport.reset();
   cleanup();
 });
 
