@@ -234,9 +234,55 @@ it('protects from !important rules in media queries > 500px', () => {
   cleanup();
 });
 
+
+it('protects animations from name collisions', () => {
+  const {scope, cleanup} = fixture('globals-animation');
+
+  if (!HAS_SHADOWDOM) {
+    const outer = document.querySelector('.a');
+    const inner = scope.shadowRoot.querySelector('.b');
+
+    const outerAnimationName = window.getComputedStyle(outer).getPropertyValue('animation-name');
+    const innerAnimationName = window.getComputedStyle(inner).getPropertyValue('animation-name');
+
+    const [outerAnimation] = getKeyFrames(outerAnimationName);
+    const [innerAnimation] = getKeyFrames(innerAnimationName);
+
+    expect(outerAnimationName).toBe('a');
+    expect(innerAnimationName).not.toBe('a');
+    expect(outerAnimation.style.getPropertyValue('color')).toBe('red');
+    expect(innerAnimation.style.getPropertyValue('color')).toBe('green');
+  }
+
+  cleanup();
+});
+
 function fixture(name) {
   const html = require(`./fixtures/${name}.html`);
   return setup(html);
+}
+
+function getAnimation(animationName) {
+  const styles = Array.prototype.slice.call(document.querySelectorAll('style'), 0);
+  const animations = styles
+    .reduce((acc, s) => {
+      Array.prototype.push.apply(acc, s.sheet.cssRules);
+      return acc;
+    }, [])
+    .filter(rule => rule.type === CSSRule.KEYFRAMES_RULE);
+
+  const matches = animations.filter(animation => animation.name === animationName);
+  return matches[matches.length - 1];
+}
+
+function getKeyFrames(animationName) {
+  const animation = getAnimation(animationName);
+
+  if (!animation) {
+    return [];
+  }
+
+  return Array.prototype.slice.call(animation.cssRules, 0);
 }
 
 function setup(html) {

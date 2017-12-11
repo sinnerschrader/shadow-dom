@@ -1,0 +1,31 @@
+<style>
+  @keyframes a {
+    50% {
+      color: red;
+    }
+  }
+  .a {
+    animation: a .5s infinite;
+  }
+</style>
+
+<div>
+  <p class="a">
+    This should pulse red
+  </p>
+  <div class="shadow-dom">
+    <style>
+      @keyframes a {
+        50% {
+          color: green;
+        }
+      }
+      .b {
+        animation: a .5s infinite;
+      }
+    </style>
+    <p class="b">
+      This should pulse green
+    </p>
+  </div>
+</div>

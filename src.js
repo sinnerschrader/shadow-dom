@@ -25,6 +25,7 @@ export function shadowDom(el) {
       }, [])
   );
 
+  const outerAnimations = outerRules.filter(rule => rule.type === CSSRule.KEYFRAMES_RULE);
   const prefixCount = Math.max(Math.ceil(getHighestSpecificity(getSelectors(outerRules)) / 100), 1);
 
   const {shadowRoot, shieldRules} = interrupt(document.createElement('div'), {id, noop, prefixCount, parent: el});
@@ -49,6 +50,10 @@ export function shadowDom(el) {
               Array.prototype.push.apply(rs, s.sheet.cssRules);
               return rs;
             }, []));
+
+          const conflictingAnimations = inner
+            .filter(rule => rule.type === CSSRule.KEYFRAMES_RULE)
+            .filter(rule => outerRules.some(r => r.name === rule.name));
 
           const effects = flattenRules(shieldRules)
             .map(affectingRule => {
@@ -81,7 +86,7 @@ export function shadowDom(el) {
               };
             })
             .map(r => {
-              r.result = scope(r.rules, {id, effects, noop, prefixCount}).join(' ');
+              r.result = scope(r.rules, {conflictingAnimations, effects, id, noop, prefixCount}).join(' ');
               return r;
             });
 
@@ -377,7 +382,15 @@ function supports(feature) {
 
 function scope(...args) {
   const [, context] = args;
-  const [rules, {effects, id, noop, prefixCount}] = args;
+  const [rules, {conflictingAnimations, effects, id, noop, prefixCount}] = args;
+
+  const animationResolutions = conflictingAnimations.map(animation => {
+    return {
+      nameBefore: animation.name,
+      name: shortid.generate(),
+      cssRules: animation.cssRules
+    };
+  });
 
   return rules.map((rule, index) => {
     switch(rule.type) {
@@ -394,16 +407,32 @@ function scope(...args) {
           }, []);
 
         const propNames = Array.prototype.slice.call(rule.style, 0);
+
         const body = propNames.map(propName => {
           const priority = affectedPropNames.indexOf(propName) > -1 ? '!important' : '';
+
+          if (propName === 'animation-name') {
+            const nameBefore = rule.style.getPropertyValue('animation-name');
+            const keyframes = animationResolutions.find(res => res.nameBefore === nameBefore);
+            if (!keyframes) {
+              return;
+            }
+            return `animation-name: ${keyframes.name}${priority};`;
+          }
+
           return `${propName}: ${rule.style.getPropertyValue(propName)}${priority};`;
         }).join('\n');
+
         const prefixOffset = affectedPropNames.length > 0 ? 1 : 0;
 
         const count = prefixCount + prefixOffset;
         const prefix = `[data-shadow-dom-root="${id}"]${range(count, `:not(#${noop})`).join('')}` // range(prefixCount + prefixOffset, `#${id}`).join(' + ');
 
         return `${prefixSelectors(rule.selectorText, prefix)} {${body}}`;
+      }
+      case CSSRule.KEYFRAMES_RULE: {
+        const keyframes = animationResolutions.find(res => res.nameBefore === rule.name);
+        return `@keyframes ${keyframes.name} {${Array.prototype.slice.call(keyframes.cssRules, 0).map(rule => rule.cssText).join('\n')}}`;
       }
       case CSSRule.MEDIA_RULE: {
         const mediaRules = Array.prototype.slice.call(rule.cssRules);
