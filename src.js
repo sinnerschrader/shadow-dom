@@ -141,11 +141,13 @@ function getHighestSpecificity(selectors) {
 }
 
 function getSelectors(rules) {
-  return rules.reduce((acc, o) => {
-    const s = o.selectorText.split(', ').map(s => s.trim());
-    Array.prototype.push.apply(acc, s);
-    return acc;
-  }, []);
+  return rules
+    .filter(r => typeof r.selectorText === 'string')
+    .reduce((acc, o) => {
+      const s = o.selectorText.split(', ').map(s => s.trim());
+      Array.prototype.push.apply(acc, s);
+      return acc;
+    }, []);
 }
 
 function getCondition(rule, keyword) {
@@ -219,6 +221,7 @@ function interrupt(el, {parent, prefixCount, noop, id}) {
     }, []);
 
   const importantRules = flattenRules(allRules)
+    .filter(rule => 'style' in rule)
     .filter((rule) => {
       const propNames = Array.prototype.slice.call(rule.style, 0);
       return propNames.some(propName => rule.style.getPropertyPriority(propName));
