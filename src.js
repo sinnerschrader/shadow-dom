@@ -110,6 +110,25 @@ export function shadowDom(el) {
   };
 }
 
+function find(arr, predicate) {
+  if (Array.prototype.find) {
+    return arr.find(predicate);
+  }
+
+  const list = Object(arr);
+  const length = list.length >>> 0;
+
+  let value;
+
+  for (let i = 0; i < length; i++) {
+    value = list[i];
+    if (predicate(value, i, list)) {
+      return value;
+    }
+  }
+  return undefined;
+}
+
 function flattenRules(rules) {
   return rules.reduce((acc, r) => {
     switch (r.type) {
@@ -413,7 +432,7 @@ function scope(...args) {
 
           if (propName === 'animation-name') {
             const nameBefore = rule.style.getPropertyValue('animation-name');
-            const keyframes = animationResolutions.find(res => res.nameBefore === nameBefore);
+            const keyframes = find(animationResolutions, res => res.nameBefore === nameBefore);
             if (!keyframes) {
               return;
             }
@@ -431,7 +450,7 @@ function scope(...args) {
         return `${prefixSelectors(rule.selectorText, prefix)} {${body}}`;
       }
       case CSSRule.KEYFRAMES_RULE: {
-        const keyframes = animationResolutions.find(res => res.nameBefore === rule.name);
+        const keyframes = find(animationResolutions, res => res.nameBefore === rule.name);
         return `@keyframes ${keyframes.name} {${Array.prototype.slice.call(keyframes.cssRules, 0).map(rule => rule.cssText).join('\n')}}`;
       }
       case CSSRule.MEDIA_RULE: {
