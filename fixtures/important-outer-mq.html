@@ -1,28 +1,28 @@
 <style>
-  @media screen and (min-width: 1px) {
+  @media screen and (max-width: 500px) {
     .b {
       color: red!important;
     }
   }
 </style>
 
-<div class="a">
-  <p>
-    This should be red
+<div>
+  <p class="b">
+    This should be red <= 500px and black > 500px
   </p>
   <div class="shadow-dom">
     <style>
       .b {
         color: green;
       }
-      @media screen and (min-width: 1px) {
+      @media screen and (min-width: 500px) {
         .b {
           color: blue;
         }
       }
     </style>
     <p class="b">
-      This should be blue
+      This should be blue >= 500px and green < 500px
     </p>
   </div>
 </div>

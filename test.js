@@ -2,6 +2,10 @@ import shadowDom from './src';
 
 const HAS_SHADOWDOM = ('attachShadow' in document.createElement('div'));
 
+afterEach(() => {
+  viewport.reset();
+});
+
 it('should exist', () => {
     expect(shadowDom).toBeDefined();
 });
@@ -200,13 +204,33 @@ it('protects from !important rules with escalating specificity', () => {
   cleanup();
 });
 
-it('protects from !important rules in media queries', () => {
+it('protects from !important rules in media queries <= 500px', () => {
+  viewport.set(499);
   const {scope, cleanup} = fixture('important-outer-mq');
 
   if (!HAS_SHADOWDOM) {
-    const b = scope.shadowRoot.querySelector('.b');
-    const color = window.getComputedStyle(b).getPropertyValue('color');
-    expect(color).toBe('rgb(0, 0, 255)');
+    const outer = document.querySelector('.b');
+    const inner = scope.shadowRoot.querySelector('.b');
+    const outerColor = window.getComputedStyle(outer).getPropertyValue('color');
+    const innerColor = window.getComputedStyle(inner).getPropertyValue('color');
+    expect(outerColor).toBe('rgb(255, 0, 0)');
+    expect(innerColor).toBe('rgb(0, 128, 0)');
+  }
+
+  cleanup();
+});
+
+it('protects from !important rules in media queries > 500px', () => {
+  viewport.set(501);
+  const {scope, cleanup} = fixture('important-outer-mq');
+
+  if (!HAS_SHADOWDOM) {
+    const outer = document.querySelector('.b');
+    const inner = scope.shadowRoot.querySelector('.b');
+    const outerColor = window.getComputedStyle(outer).getPropertyValue('color');
+    const innerColor = window.getComputedStyle(inner).getPropertyValue('color');
+    expect(outerColor).toBe('rgb(0, 0, 0)');
+    expect(innerColor).toBe('rgb(0, 0, 255)');
   }
 
   cleanup();

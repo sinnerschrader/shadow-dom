@@ -56,9 +56,9 @@ function shadowDom(el) {
             }, []));
 
           // TODO: Handle CSSGroupingRule
-          const effects = shieldRules
+          const effects = flattenRules(shieldRules)
             .map(affectingRule => {
-              const prefix = `[data-shadow-dom-root="${id}"]${range(prefixCount, `:not(#${noop})`).join('')}`
+              const prefix = `[data-shadow-dom-root="${id}"]${range(prefixCount, `:not(#${noop})`).join('')}`;
               const affectingSelector = unprefixSelectors(affectingRule.selectorText, prefix);
               const affectedEls = Array.prototype.slice.call(doc.querySelectorAll(affectingSelector), 0);
               const affectedPropNames = Array.prototype.slice.call(affectingRule.style, 0);
@@ -122,6 +122,7 @@ function flattenRules(rules) {
         Array.prototype.push.apply(acc, flattenRules(Array.prototype.slice.call(r.cssRules, 0)));
         break;
       default:
+        acc.push(r);
         return acc;
     }
     return acc;
@@ -220,7 +221,6 @@ function interrupt(el, {parent, prefixCount, noop, id}) {
       return rules;
     }, []);
 
-  // TODO: handle CSSGroupingRules properly
   const importantRules = flattenRules(allRules)
     .filter((rule) => {
       const propNames = Array.prototype.slice.call(rule.style, 0);
@@ -232,14 +232,7 @@ function interrupt(el, {parent, prefixCount, noop, id}) {
   if (importantRules.length > 0) {
     shield.setAttribute('data-shadow-dom-shield-id', id);
     shield.setAttribute('data-shadow-dom', true);
-
-    // TODO: handle CSSGroupingRules properly
-    shield.textContent = importantRules.map(importantRule => {
-      const propNames = Array.prototype.slice.call(importantRule.style, 0);
-      return `${prefixSelectors(importantRule.selectorText, prefix)} {
-        ${propNames.map(prop => `${prop}: ${initialFor(prop)}!important;`).join('\n')}
-      }`;
-    }).join('\n');
+    shield.textContent = interceptRules(importantRules, {initialFor, prefix}).join('\n');
 
     parent.insertBefore(shield, parent.firstChild);
   }
@@ -251,6 +244,39 @@ function interrupt(el, {parent, prefixCount, noop, id}) {
     shieldRules: shield === null ? [] : Array.prototype.slice.call(shield.sheet.cssRules, 0)
   };
 }
+
+function interceptRules(...args) {
+  const [, context] = args;
+  const [rules, {initialFor, prefix}] = args;
+
+  return rules.map(rule => {
+    const propNames = Array.prototype.slice.call(rule.style, 0);
+    const content = `${prefixSelectors(rule.selectorText, prefix)} {
+      ${propNames.map(prop => `${prop}: ${initialFor(prop)}!important;`).join('\n')}
+    }`;
+
+    return wrapWithParents(content, rule);
+  })
+}
+
+function wrapWithParents(content, rule) {
+  let result = content;
+
+  while(rule.parentRule) {
+    rule = rule.parentRule;
+    switch (rule.type) {
+      case CSSRule.MEDIA_RULE:
+        result = `@media ${getCondition(rule, 'media')} { ${content} }`;
+        break;
+      case CSSRule.SUPPORTS_RULE:
+        result = `@supports ${getCondition(rule, 'supports')} { ${content} }`;
+        break;
+    }
+  }
+
+  return result;
+}
+
 
 function matches(el, selector) {
   if ('matches' in el) {
