@@ -18,6 +18,7 @@ function shadowDom(el) {
   el.innerHTML = '';
 
   const id = shortid.generate();
+  const noop = shortid.generate();
 
   const outer = Array.prototype.slice.call(document.querySelectorAll('style'), 0)
     .reduce((rs, s) => {
@@ -34,9 +35,9 @@ function shadowDom(el) {
   const highest = getHighestSpecificity(selectors);
   const prefixCount = Math.max(Math.ceil(highest / 100), 1);
 
-  const {shadowRoot, shieldRules} = interrupt(document.createElement('div'), {id, prefixCount, parent: el});
+  const {shadowRoot, shieldRules} = interrupt(document.createElement('div'), {id, noop, prefixCount, parent: el});
 
-  shadowRoot.setAttribute('id', id);
+  shadowRoot.setAttribute('data-shadow-dom-root', id);
   shadowRoot.innerHTML = '';
 
   el.appendChild(shadowRoot);
@@ -60,7 +61,8 @@ function shadowDom(el) {
           // TODO: Handle CSSGroupingRule
           const effects = shieldRules
             .map(affectingRule => {
-              const prefix = range(prefixCount, `#${id}`).join(' + ');
+              // const prefix = range(prefixCount, `#${id}`).join(' + ');
+              const prefix = `[data-shadow-dom-root="${id}"]${range(prefixCount, `:not(#${noop})`).join('')}`
               const affectingSelector = unprefixSelectors(affectingRule.selectorText, prefix);
               const affectedEls = Array.prototype.slice.call(doc.querySelectorAll(affectingSelector), 0);
               const affectedPropNames = Array.prototype.slice.call(affectingRule.style, 0);
@@ -89,7 +91,7 @@ function shadowDom(el) {
               };
             })
             .map(r => {
-              r.result = scope(r.rules, {id, effects, prefixCount}).join(' ');
+              r.result = scope(r.rules, {id, effects, noop, prefixCount}).join(' ');
               return r;
             });
 
@@ -185,7 +187,7 @@ function getValue() {
   };
 }
 
-function interrupt(el, {parent, prefixCount, id}) {
+function interrupt(el, {parent, prefixCount, noop, id}) {
   const all = supports('all');
   const initial = supports('initial');
 
@@ -196,7 +198,7 @@ function interrupt(el, {parent, prefixCount, id}) {
   style.setAttribute('data-shadow-dom-initial-id', id);
   style.setAttribute('data-shadow-dom', true);
 
-  const prefix = range(prefixCount, `#${id}`).join(' + ');
+  const prefix = `[data-shadow-dom-root="${id}"]${range(prefixCount, `:not(#${noop})`).join('')}`;
 
   // Edge 15..17 is currently the only browser that
   // does *NOT* support "all" but "initial".
@@ -239,12 +241,6 @@ function interrupt(el, {parent, prefixCount, id}) {
   }
 
   parent.insertBefore(style, parent.firstChild);
-
-  for (let i = 0; i < prefixCount; i++) {
-    const e = document.createElement('div');
-    e.setAttribute('id', id);
-    parent.appendChild(e);
-  }
 
   return {
     shadowRoot: el,
@@ -355,7 +351,7 @@ function supports(feature) {
 
 function scope(...args) {
   const [, context] = args;
-  const [rules, {effects, id, prefixCount}] = args;
+  const [rules, {effects, id, noop, prefixCount}] = args;
 
   return rules.map((rule, index) => {
     switch(rule.type) {
@@ -378,7 +374,8 @@ function scope(...args) {
         }).join('\n');
         const prefixOffset = affectedPropNames.length > 0 ? 1 : 0;
 
-        const prefix = range(prefixCount + prefixOffset, `#${id}`).join(' + ');
+        const count = prefixCount + prefixOffset;
+        const prefix = `[data-shadow-dom-root="${id}"]${range(count, `:not(#${noop})`).join('')}` // range(prefixCount + prefixOffset, `#${id}`).join(' + ');
 
         return `${prefixSelectors(rule.selectorText, prefix)} {${body}}`;
       }
