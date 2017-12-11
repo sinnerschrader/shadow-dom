@@ -19,17 +19,15 @@ function shadowDom(el) {
   const id = shortid.generate();
   const noop = shortid.generate();
 
-  const outer = Array.prototype.slice.call(document.querySelectorAll('style'), 0)
-    .reduce((rs, s) => {
-      Array.prototype.push.apply(rs, s.sheet.cssRules);
-      return rs;
-    }, []);
+  const outerRules = flattenRules(
+    Array.prototype.slice.call(document.querySelectorAll('style'), 0)
+      .reduce((rs, s) => {
+        Array.prototype.push.apply(rs, s.sheet.cssRules);
+        return rs;
+      }, [])
+  );
 
-  const selectors = outer.reduce((acc, o) => {
-    const s = o.selectorText.split(', ').map(s => s.trim());
-    Array.prototype.push.apply(acc, s);
-    return acc;
-  }, []);
+  const selectors = getSelectors(outerRules);
 
   const highest = getHighestSpecificity(selectors);
   const prefixCount = Math.max(Math.ceil(highest / 100), 1);
@@ -142,6 +140,14 @@ function getHighestSpecificity(selectors) {
 
   const spec = specificity.calculate(selectors.sort(specificity.compare)[0])[0].specificityArray;
   return parseInt(spec.join(''), 10);
+}
+
+function getSelectors(rules) {
+  return rules.reduce((acc, o) => {
+    const s = o.selectorText.split(', ').map(s => s.trim());
+    Array.prototype.push.apply(acc, s);
+    return acc;
+  }, []);
 }
 
 function getCondition(rule, keyword) {

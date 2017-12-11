@@ -1,0 +1,28 @@
+<style>
+  @media screen and (min-width: 1px) {
+    .b {
+      color: red!important;
+    }
+  }
+</style>
+
+<div class="a">
+  <p>
+    This should be red
+  </p>
+  <div class="shadow-dom">
+    <style>
+      .b {
+        color: green;
+      }
+      @media screen and (min-width: 1px) {
+        .b {
+          color: blue;
+        }
+      }
+    </style>
+    <p class="b">
+      This should be blue
+    </p>
+  </div>
+</div>

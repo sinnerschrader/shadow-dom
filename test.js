@@ -176,7 +176,7 @@ it('preserves specifity relations as found', () => {
   cleanup();
 });
 
-it('protects against !important rules with higher specificity', () => {
+it('protects from !important rules with higher specificity', () => {
   const {scope, cleanup} = fixture('important-high-specificity');
 
   if (!HAS_SHADOWDOM) {
@@ -188,13 +188,25 @@ it('protects against !important rules with higher specificity', () => {
   cleanup();
 });
 
-it('protects against !important rules with escalating specificity', () => {
+it('protects from !important rules with escalating specificity', () => {
   const {scope, cleanup} = fixture('important-id-specificity');
 
   if (!HAS_SHADOWDOM) {
     const a = scope.shadowRoot.querySelector('.a');
     const color = window.getComputedStyle(a).getPropertyValue('color');
     expect(color).toBe('rgb(0, 128, 0)');
+  }
+
+  cleanup();
+});
+
+it('protects from !important rules in media queries', () => {
+  const {scope, cleanup} = fixture('important-outer-mq');
+
+  if (!HAS_SHADOWDOM) {
+    const b = scope.shadowRoot.querySelector('.b');
+    const color = window.getComputedStyle(b).getPropertyValue('color');
+    expect(color).toBe('rgb(0, 0, 255)');
   }
 
   cleanup();
