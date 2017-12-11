@@ -9,7 +9,6 @@ const SUPPORTS_SHADOW_DOM = ('attachShadow' in HTMLElement.prototype);
 export default shadowDom;
 
 function shadowDom(el) {
-  // Paydirt, nothing to do
   if (SUPPORTS_SHADOW_DOM) {
     el.attachShadow({mode: 'open'});
     return el;
@@ -61,7 +60,6 @@ function shadowDom(el) {
           // TODO: Handle CSSGroupingRule
           const effects = shieldRules
             .map(affectingRule => {
-              // const prefix = range(prefixCount, `#${id}`).join(' + ');
               const prefix = `[data-shadow-dom-root="${id}"]${range(prefixCount, `:not(#${noop})`).join('')}`
               const affectingSelector = unprefixSelectors(affectingRule.selectorText, prefix);
               const affectedEls = Array.prototype.slice.call(doc.querySelectorAll(affectingSelector), 0);
