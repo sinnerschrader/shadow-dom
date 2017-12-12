@@ -14,7 +14,8 @@ module.exports = config => {
 
     // list of files / patterns to load in the browser
     files: [
-      { pattern: 'test.js', watched: false }
+      { pattern: 'test.js', watched: false },
+      { pattern: './fixtures/*', included: false, served: true }
     ],
 
     // preprocess matching files before serving them to the browser

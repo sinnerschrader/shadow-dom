@@ -1,0 +1,28 @@
+<style>
+  @font-face {
+    font-family: a;
+    src: url(/base/fixtures/a.ttf);
+  }
+  .a {
+    font-family: a, 'Helvetica', sans-serif;
+  }
+</style>
+<div>
+  <p class="a">
+   This should be Roboto
+  </p>
+  <div class="shadow-dom">
+    <style>
+      @font-face {
+        font-family: a;
+        src: url(/base/fixtures/b.ttf);
+      }
+      .b {
+        font-family: a, 'Helvetica Neue', sans-serif;
+      }
+    </style>
+    <p class="b">
+      This should be OpenSans
+    </p>
+  </div>
+</div>

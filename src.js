@@ -26,6 +26,7 @@ export function shadowDom(el) {
   );
 
   const outerAnimations = outerRules.filter(rule => rule.type === CSSRule.KEYFRAMES_RULE);
+  const outerFonts = outerRules.filter(rule => rule.type === CSSRule.FONT_FACE_RULE);
   const prefixCount = Math.max(Math.ceil(getHighestSpecificity(getSelectors(outerRules)) / 100), 1);
 
   const {shadowRoot, shieldRules} = interrupt(document.createElement('div'), {id, noop, prefixCount, parent: el});
@@ -53,7 +54,11 @@ export function shadowDom(el) {
 
           const conflictingAnimations = inner
             .filter(rule => rule.type === CSSRule.KEYFRAMES_RULE)
-            .filter(rule => outerRules.some(r => r.name === rule.name));
+            .filter(rule => some(outerAnimations, r => r.name === rule.name));
+
+          const conflictingFonts = inner
+            .filter(rule => rule.type === CSSRule.FONT_FACE_RULE)
+            .filter(rule => some(outerFonts, r => r.style.getPropertyValue('font-family') === rule.style.getPropertyValue('font-family')))
 
           const effects = flattenRules(shieldRules)
             .map(affectingRule => {
@@ -86,7 +91,7 @@ export function shadowDom(el) {
               };
             })
             .map(r => {
-              r.result = scope(r.rules, {conflictingAnimations, effects, id, noop, prefixCount}).join(' ');
+              r.result = scope(r.rules, {conflictingAnimations, conflictingFonts, effects, id, noop, prefixCount}).join(' ');
               return r;
             });
 
@@ -245,7 +250,7 @@ function interrupt(el, {parent, prefixCount, noop, id}) {
     .filter(rule => 'style' in rule)
     .filter((rule) => {
       const propNames = Array.prototype.slice.call(rule.style, 0);
-      return propNames.some(propName => rule.style.getPropertyPriority(propName));
+      return some(propNames, propName => rule.style.getPropertyPriority(propName));
     }, []);
 
   const shield = importantRules.length > 0 ? document.createElement('style') : null;
@@ -354,6 +359,135 @@ function repeat(string, count) {
   return result;
 }
 
+function scope(...args) {
+  const [, context] = args;
+  const [rules, {conflictingAnimations, conflictingFonts, effects, id, noop, prefixCount}] = args;
+
+  const animationResolutions = conflictingAnimations.map(animation => {
+    return {
+      nameBefore: animation.name,
+      name: shortid.generate(),
+      cssRules: animation.cssRules
+    };
+  });
+
+  const fontResolutions = conflictingFonts.map(font => {
+    const family = font.style.getPropertyValue('font-family');
+    const name = shortid.generate();
+
+    return {
+      nameBefore: family.replace(/("|')/g, ''),
+      name,
+      style: font.style
+    };
+  });
+
+  return rules.map((rule, index) => {
+    switch(rule.type) {
+      case CSSRule.FONT_FACE_RULE: {
+        const face = find(fontResolutions, res => res.nameBefore === rule.style.getPropertyValue('font-family')) || rule;
+        const propNames = Array.prototype.slice.call(face.style, 0);
+        const body = propNames.map(propName => {
+          if (face.name && propName === 'font-family') {
+            return `${propName}: ${face.name};`;
+          }
+          return `${propName}: ${face.style.getPropertyValue(propName)};`;
+        }).join('\n');
+        return `@font-face {${body}}`;
+      }
+      case CSSRule.KEYFRAMES_RULE: {
+        const keyframes = find(animationResolutions, res => res.nameBefore === rule.name) || rule;
+        return `@keyframes ${keyframes.name} {${Array.prototype.slice.call(keyframes.cssRules, 0).map(rule => rule.cssText).join('\n')}}`;
+      }
+      case CSSRule.MEDIA_RULE: {
+        const mediaRules = Array.prototype.slice.call(rule.cssRules);
+        return `@media ${getCondition(rule, 'media')} {${scope(mediaRules, context)}}`;
+      }
+      case CSSRule.SUPPORTS_RULE: {
+        const mediaRules = Array.prototype.slice.call(rule.cssRules);
+        return `@supports ${getCondition(rule, 'supports')} {${scope(mediaRules, context)}}`;
+      }
+      case CSSRule.STYLE_RULE: {
+        // TODO: simplify this, perhaps a facade in front of CSSRule is in order
+        const affectedPropNames = effects
+          .reduce((acc, effect) => {
+            const rs = effect.affectedRules.filter(a => a.rule === rule);
+            Array.prototype.push.apply(acc, rs.reduce((a, r) => {
+              Array.prototype.push.apply(a, r.props);
+              return a;
+            }, []));
+            return acc;
+          }, []);
+
+        const propNames = Array.prototype.slice.call(rule.style, 0);
+
+        const body = propNames.map(propName => {
+          const priority = affectedPropNames.indexOf(propName) > -1 ||
+            rule.style.getPropertyPriority(propName) === 'important' ? '!important' : '';
+
+          if (propName === 'animation-name') {
+            const nameBefore = rule.style.getPropertyValue('animation-name');
+            const keyframes = find(animationResolutions, res => res.nameBefore === nameBefore);
+            if (keyframes) {
+              return `animation-name: ${keyframes.name}${priority}${priority};`;
+            }
+          }
+
+          if (propName === 'font-family') {
+            const fontList = rule.style.getPropertyValue('font-family')
+              .split(',')
+              .map(f => f.trim())
+              .filter(Boolean);
+
+            const face = find(fontResolutions, r => some(fontList, f => r.nameBefore === f));
+
+            if (face) {
+              const list = fontList.map(f => f === face.nameBefore ? face.name : f);
+              return `font-family: ${list.join(', ')}`;
+            }
+          }
+
+          return `${propName}: ${rule.style.getPropertyValue(propName)}${priority};`;
+        }).join('\n');
+
+        const prefixOffset = affectedPropNames.length > 0 ? 1 : 0;
+
+        const count = prefixCount + prefixOffset;
+        const prefix = `[data-shadow-dom-root="${id}"]${range(count, `:not(#${noop})`).join('')}` // range(prefixCount + prefixOffset, `#${id}`).join(' + ');
+
+        return `${prefixSelectors(rule.selectorText, prefix)} {${body}}`;
+      }
+      default:
+        return rule.cssText;
+    }
+  });
+}
+
+function some(arr, predicate) {
+  if (Array.prototype.some) {
+    return arr.some(predicate);
+  }
+
+  if (arr == null) {
+    throw new TypeError('Array.prototype.some called on null or undefined');
+  }
+
+  if (typeof predicate !== 'function') {
+    throw new TypeError();
+  }
+
+  const t = Object(arr);
+  const len = t.length >>> 0;
+
+  for (let i = 0; i < len; i++) {
+    if (i in t && fun(t[i], i, t)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function supports(feature) {
   // Use CSS.supports if available
   if ('CSS' in window && 'supports' in CSS) {
@@ -397,74 +531,6 @@ function supports(feature) {
     default:
       throw new TypeError(`supports: unknown feature "${feature}".`);
   }
-}
-
-function scope(...args) {
-  const [, context] = args;
-  const [rules, {conflictingAnimations, effects, id, noop, prefixCount}] = args;
-
-  const animationResolutions = conflictingAnimations.map(animation => {
-    return {
-      nameBefore: animation.name,
-      name: shortid.generate(),
-      cssRules: animation.cssRules
-    };
-  });
-
-  return rules.map((rule, index) => {
-    switch(rule.type) {
-      case CSSRule.STYLE_RULE: {
-        // TODO: simplify this, perhaps a facade in front of CSSRule is in order
-        const affectedPropNames = effects
-          .reduce((acc, effect) => {
-            const rs = effect.affectedRules.filter(a => a.rule === rule);
-            Array.prototype.push.apply(acc, rs.reduce((a, r) => {
-              Array.prototype.push.apply(a, r.props);
-              return a;
-            }, []));
-            return acc;
-          }, []);
-
-        const propNames = Array.prototype.slice.call(rule.style, 0);
-
-        const body = propNames.map(propName => {
-          const priority = affectedPropNames.indexOf(propName) > -1 ? '!important' : '';
-
-          if (propName === 'animation-name') {
-            const nameBefore = rule.style.getPropertyValue('animation-name');
-            const keyframes = find(animationResolutions, res => res.nameBefore === nameBefore);
-            if (!keyframes) {
-              return;
-            }
-            return `animation-name: ${keyframes.name}${priority};`;
-          }
-
-          return `${propName}: ${rule.style.getPropertyValue(propName)}${priority};`;
-        }).join('\n');
-
-        const prefixOffset = affectedPropNames.length > 0 ? 1 : 0;
-
-        const count = prefixCount + prefixOffset;
-        const prefix = `[data-shadow-dom-root="${id}"]${range(count, `:not(#${noop})`).join('')}` // range(prefixCount + prefixOffset, `#${id}`).join(' + ');
-
-        return `${prefixSelectors(rule.selectorText, prefix)} {${body}}`;
-      }
-      case CSSRule.KEYFRAMES_RULE: {
-        const keyframes = find(animationResolutions, res => res.nameBefore === rule.name);
-        return `@keyframes ${keyframes.name} {${Array.prototype.slice.call(keyframes.cssRules, 0).map(rule => rule.cssText).join('\n')}}`;
-      }
-      case CSSRule.MEDIA_RULE: {
-        const mediaRules = Array.prototype.slice.call(rule.cssRules);
-        return `@media ${getCondition(rule, 'media')} {${scope(mediaRules, context)}}`;
-      }
-      case CSSRule.SUPPORTS_RULE: {
-        const mediaRules = Array.prototype.slice.call(rule.cssRules);
-        return `@supports ${getCondition(rule, 'supports')} {${scope(mediaRules, context)}}`;
-      }
-      default:
-        return rule.cssText;
-    }
-  });
 }
 
 function unprefixSelectors(selectorText, prefix) {

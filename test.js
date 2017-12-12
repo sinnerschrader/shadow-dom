@@ -257,6 +257,21 @@ it('protects animations from name collisions', () => {
   cleanup();
 });
 
+it('protects fonts from name collisions', () => {
+  const {scope, cleanup} = fixture('globals-fontface');
+
+  if (!HAS_SHADOWDOM) {
+    const outer = document.querySelector('.a');
+    const inner = scope.shadowRoot.querySelector('.b');
+
+    const outerFontList = getFontList(outer);
+    const innerFontList = getFontList(inner);
+
+    expect(outerFontList).toContain('a');
+    expect(innerFontList).not.toContain('a');
+  }
+});
+
 function fixture(name) {
   const html = require(`./fixtures/${name}.html`);
   return setup(html);
@@ -273,6 +288,11 @@ function getAnimation(animationName) {
 
   const matches = animations.filter(animation => animation.name === animationName);
   return matches[matches.length - 1];
+}
+
+function getFontList(element) {
+  const fontFamily = window.getComputedStyle(element).getPropertyValue('font-family');
+  return fontFamily.split(',').map(f => f.trim());
 }
 
 function getKeyFrames(animationName) {
