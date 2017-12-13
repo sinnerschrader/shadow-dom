@@ -1,8 +1,8 @@
 module.exports = config => {
   if (!process.env.BROWSER_STACK_USERNAME || !process.env.BROWSER_STACK_ACCESS_KEY) {
     console.log('Falling back to local tests as BROWSER_STACK_USERNAME and BROWSER_STACK_ACCESS_KEY are not set.');
-    require('./karma.local.js'); // eslint-disable-line import/no-unassigned-import
-    process.exit(0); // eslint-disable-line unicorn/no-process-exit
+    require('./karma.local.js');
+    process.exit(0);
   }
 
   config.set({
@@ -40,41 +40,45 @@ module.exports = config => {
       devtool: 'source-map',
       watch: false
     },
+    browserStack: {
+      username: process.env.BROWSER_STACK_USERNAME,
+      accessKey: process.env.BROWSER_STACK_ACCESS_KEY
+    },
     customLaunchers: {
-      bs_chrome: { // eslint-disable-line camelcase
+      bs_chrome: {
         base: 'BrowserStack',
         browser: 'chrome',
-        browser_version: '62.0', // eslint-disable-line camelcase
+        browser_version: '62.0',
         os: 'OS X',
-        os_version: 'Sierra' // eslint-disable-line camelcase
+        os_version: 'Sierra'
       },
-      bs_firefox: { // eslint-disable-line camelcase
+      bs_firefox: {
         base: 'BrowserStack',
         browser: 'firefox',
-        browser_version: '57.0', // eslint-disable-line camelcase
+        browser_version: '57.0',
         os: 'OS X',
-        os_version: 'Sierra' // eslint-disable-line camelcase
+        os_version: 'Sierra'
       },
-      bs_safari: { // eslint-disable-line camelcase
+      bs_safari: {
         base: 'BrowserStack',
         browser: 'safari',
-        browser_version: '11', // eslint-disable-line camelcase
+        browser_version: '11',
         os: 'OS X',
-        os_version: 'High Sierra' // eslint-disable-line camelcase
+        os_version: 'High Sierra'
       },
-      bs_ie: { // eslint-disable-line camelcase
+      bs_ie: {
         base: 'BrowserStack',
         browser: 'ie',
-        browser_version: '11.0', // eslint-disable-line camelcase
+        browser_version: '11.0',
         os: 'Windows',
-        os_version: '10' // eslint-disable-line camelcase
+        os_version: '10'
       },
-      bs_edge: { // eslint-disable-line camelcase
+      bs_edge: {
         base: 'BrowserStack',
         browser: 'edge',
-        browser_version: '16', // eslint-disable-line camelcase
+        browser_version: '16',
         os: 'Windows',
-        os_version: '10' // eslint-disable-line camelcase
+        os_version: '10'
       }
     },
     browsers: [

@@ -31,7 +31,12 @@
   },
   "xo": {
     "space": true,
-    "env": ["browser", "jasmine"]
+    "env": ["browser", "jasmine"],
+    "rules": {
+      "camelcase": [0],
+      "import/no-unassigned-import": [0],
+      "unicorn/no-process-exit": [0]
+    }
   },
   "repository": {
     "type": "git",
