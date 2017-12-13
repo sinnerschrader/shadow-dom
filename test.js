@@ -194,7 +194,7 @@ it('protects from !important rules with escalating specificity', () => {
   if (!HAS_SHADOWDOM) {
     const a = scope.shadowRoot.querySelector('.a');
     const color = window.getComputedStyle(a).getPropertyValue('color');
-    expect(color).toBe('rgb(0, 128, 0)');
+    expect(color).toBe('rgb(0, 0, 0)');
   }
 
   cleanup();
@@ -213,8 +213,8 @@ it('protects from !important rules in media queries <= 500px', () => {
     expect(innerColor).toBe('rgb(0, 128, 0)');
   }
 
-  viewport.reset();
   cleanup();
+  viewport.reset();
 });
 
 it('protects from !important rules in media queries > 500px', () => {
@@ -230,8 +230,8 @@ it('protects from !important rules in media queries > 500px', () => {
     expect(innerColor).toBe('rgb(0, 0, 255)');
   }
 
-  viewport.reset();
   cleanup();
+  viewport.reset();
 });
 
 
@@ -270,6 +270,8 @@ it('protects fonts from name collisions', () => {
     expect(outerFontList).toContain('a');
     expect(innerFontList).not.toContain('a');
   }
+
+  cleanup();
 });
 
 function fixture(name) {

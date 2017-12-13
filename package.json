@@ -8,6 +8,7 @@
     "test:remote": "karma start karma.remote.js"
   },
   "babel": {
+    "plugins": ["transform-object-assign"],
     "presets": [
       [
         "env",
@@ -43,6 +44,7 @@
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-loader": "^7.1.2",
+    "babel-plugin-transform-object-assign": "^6.22.0",
     "babel-preset-env": "^1.6.1",
     "jasmine-core": "^2.8.0",
     "karma": "^1.7.1",
@@ -59,6 +61,7 @@
     "webpack": "^3.8.0"
   },
   "dependencies": {
+    "postcss-selector-parser": "^3.1.1",
     "shortid": "^2.2.8",
     "specificity": "^0.3.2"
   }

@@ -1,3 +1,4 @@
+import selectorParser from 'postcss-selector-parser';
 import shortid from 'shortid';
 import specificity from 'specificity';
 
@@ -16,21 +17,16 @@ export function shadowDom(el) {
 
   const id = shortid.generate();
   const noop = shortid.generate();
+  const initialFor = getValue();
 
-  const outerRules = flattenRules(
-    Array.prototype.slice.call(document.querySelectorAll('style'), 0)
-      .reduce((rs, s) => {
-        Array.prototype.push.apply(rs, s.sheet.cssRules);
-        return rs;
-      }, [])
+  const initialOuterRules = flattenRules(
+    toArray(document.querySelectorAll('style'), 0).reduce((rs, s) => pushTo(rs, s.sheet.cssRules), [])
   );
 
-  const outerAnimations = outerRules.filter(rule => rule.type === CSSRule.KEYFRAMES_RULE);
-  const outerFonts = outerRules.filter(rule => rule.type === CSSRule.FONT_FACE_RULE);
-  const prefixCount = Math.max(Math.ceil(getHighestSpecificity(getSelectors(outerRules)) / 100), 1);
+  const prefixCount = Math.max(Math.ceil(getHighestSpecificity(getSelectors(initialOuterRules)) / 100), 1);
+  const prefix = `[data-shadow-dom-root="${id}"]:not(#${noop})`;
 
-  const {shadowRoot, shieldRules} = interrupt(document.createElement('div'), {id, noop, prefixCount, parent: el});
-
+  const {shadowRoot, shieldRules} = interrupt(document.createElement('div'), {id, initialFor, noop, prefixCount, parent: el});
   shadowRoot.setAttribute('data-shadow-dom-root', id);
   shadowRoot.innerHTML = '';
 
@@ -41,62 +37,150 @@ export function shadowDom(el) {
       return {
         set innerHTML(innerHTML) {
           const doc = parser.parseFromString(innerHTML, 'text/html');
+          const outerDoc = parser.parseFromString(document.documentElement.outerHTML, 'text/html');
 
-          const styles = Array.prototype.slice.call(doc.querySelectorAll('style'), 0)
-            .filter((style) => !style.getAttribute('data-shadow-dom'));
+          const outerRules = toArray(outerDoc.querySelectorAll('style'), 0).reduce((rs, s) => pushTo(rs, s.sheet.cssRules), [])
+          const outerAnimations = outerRules.filter(rule => rule.type === CSSRule.KEYFRAMES_RULE);
+          const outerFonts = outerRules.filter(rule => rule.type === CSSRule.FONT_FACE_RULE);
 
-          const inner = flattenRules(styles
-            .filter((style) => !style.getAttribute('data-shadow-dom'))
-            .reduce((rs, s) => {
-              Array.prototype.push.apply(rs, s.sheet.cssRules);
-              return rs;
-            }, []));
+          const flattenOuterRules = flattenRules(outerRules);
 
-          const conflictingAnimations = inner
-            .filter(rule => rule.type === CSSRule.KEYFRAMES_RULE)
-            .filter(rule => some(outerAnimations, r => r.name === rule.name));
+          const innerRules = toArray(doc.querySelectorAll('style'), 0).reduce((rs, s) => pushTo(rs, s.sheet.cssRules), []);
+          const flattenInnerRules = flattenRules(innerRules);
 
-          const conflictingFonts = inner
-            .filter(rule => rule.type === CSSRule.FONT_FACE_RULE)
-            .filter(rule => some(outerFonts, r => r.style.getPropertyValue('font-family') === rule.style.getPropertyValue('font-family')))
+          const prefixCount = Math.max(Math.ceil(getHighestSpecificity(getSelectors(flattenOuterRules)) / 100), 1);
+          const prefix = `[data-shadow-dom-root="${id}"]:not(#${noop})`;
 
-          const effects = flattenRules(shieldRules)
-            .map(affectingRule => {
-              const prefix = `[data-shadow-dom-root="${id}"]${range(prefixCount, `:not(#${noop})`).join('')}`;
-              const affectingSelector = unprefixSelectors(affectingRule.selectorText, prefix);
-              const affectedEls = Array.prototype.slice.call(doc.querySelectorAll(affectingSelector), 0);
-              const affectedPropNames = Array.prototype.slice.call(affectingRule.style, 0);
+          const mount = getElementByPath(getPathByElement(el), outerDoc);
+          mount.innerHTML = innerHTML;
 
+          const shielding = flattenOuterRules
+            .reduce((acc, r) => {
+              r.selectorText.split(',')
+                .map(s => s.trim())
+                .forEach(s => {
+                  acc.push({
+                    parentNode: r.parentNode,
+                    selectorText: s,
+                    style: r.style
+                  });
+                });
+              return acc;
+            }, [])
+            .map(rule => {
+              const affectedElements = toArray(outerDoc.querySelectorAll(rule.selectorText), 0).filter(el => mount.contains(el))
               return {
-                affectingRule,
-                affectedRules: inner
-                  .map(rule => {
-                    return {
-                      rule,
-                      props: affectedPropNames.filter(propName => Boolean(rule.style.getPropertyValue(propName))),
-                      els: affectedEls.filter(el => matches(el, rule.selectorText))
-                    };
-                  })
-                  .filter(affected => affected.props.length > 0 && affected.els.length > 0)
+                affectedElements,
+                rule
               };
             })
-            .filter(effect => effect.affectedRules.length > 0);
+            .filter(({affectedElements}) => affectedElements.length > 0)
+            .map(({rule, affectedElements}) => {
+              const insideSelector = selectorInside(rule.selectorText, {el: mount, doc: outerDoc});
+              const outsideSelector = selectorOutside(rule.selectorText, {el: mount, doc: outerDoc});
+              const selector = `${outsideSelector} ${prefix} ${insideSelector}`;
+              const [calc] = specificity.calculate(selector);
 
-          const replacements = styles
-            .map(style => {
               return {
-                target: style,
-                result: style.textContent,
-                rules: Array.prototype.slice.call(style.sheet.cssRules, 0)
+                affectedElements,
+                rule,
+                selector,
+                specificity: calc.specificityArray
               };
-            })
-            .map(r => {
-              r.result = scope(r.rules, {conflictingAnimations, conflictingFonts, effects, id, noop, prefixCount}).join(' ');
-              return r;
             });
 
-          replacements.forEach(replacement => {
-            replacement.target.textContent = replacement.result;
+          const shieldCss = shielding.map(({rule, selector}) => {
+            const propNames = toArray(rule.style, 0);
+            const content = `
+              ${selector} {
+                ${propNames.map(prop => {
+                  const priority = rule.style.getPropertyPriority(prop) === 'important' ? '!important' : ''
+                  return `${prop}: ${initialFor(prop)}${priority};`
+                }).join('\n')}
+            }`;
+            return wrapWithParents(content, rule)
+          }).join('\n');
+
+          const styles = toArray(doc.querySelectorAll('style'), 0);
+          const mostSpecificShield = shielding.sort((a, b) => specificity.compare(a.specificity, b.specificity))[0];
+          const factor = mostSpecificShield ? Math.max(Math.ceil(parseInt(mostSpecificShield.specificity.join('')) / 100), 1) : 1;
+          const innerPrefix = `[data-shadow-dom-root="${id}"]${range(factor, `:not(#${noop})`).join('')}`;
+
+          const animationResolutions = innerRules
+            .filter(rule => rule.type === CSSRule.KEYFRAMES_RULE)
+            .filter(rule => some(outerAnimations, r => r.name === rule.name))
+            .map(rule => ({
+              nameBefore: rule.name,
+              name: shortid.generate(),
+              rule
+            }));
+
+          const fontResolutions = innerRules
+            .filter(rule => rule.type === CSSRule.FONT_FACE_RULE)
+            .filter(rule => some(outerFonts, r => r.style.getPropertyValue('font-family') === rule.style.getPropertyValue('font-family')))
+            .map(rule => ({
+              nameBefore: rule.style.getPropertyValue('font-family'),
+              name: shortid.generate(),
+              rule
+            }));
+
+          const tasks = styles.map(style => {
+            const rawRules = toArray(style.sheet.cssRules, 0);
+
+            const rules = rawRules.reduce((acc, rule) => {
+              if (rule.type === CSSRule.STYLE_RULE) {
+                rule.selectorText.split(',').map(s => s.trim()).forEach(selector => {
+                  acc.push({
+                    cssText: rule.cssText,
+                    type: rule.type,
+                    parentRule: rule.parentRule,
+                    selectorText: selector,
+                    style: rule.style
+                  });
+                });
+              } else {
+                acc.push(rule);
+              }
+              return acc;
+            }, []);
+
+            const replacements = rules.map(rule => {
+              const selector = getFlatSelector(rule);
+
+              const matchedElements = selector
+                ? toArray(outerDoc.querySelectorAll(selector)).filter(node => mount.contains(node))
+                : [];
+
+              // TODO Extract important props from this
+              const importantPropNames = shielding
+                .filter(s => some(s.affectedElements, a => some(matchedElements, m => a === m)))
+                .reduce((acc, {rule: {style}}) => {
+                  const isImportant = propName => style.getPropertyPriority(propName) === 'important';
+                  return pushTo(acc, toArray(style).filter(isImportant));
+                }, []);
+
+                return scopeRule(rule, {
+                  animationResolutions,
+                  fontResolutions,
+                  id,
+                  importantPropNames,
+                  noop,
+                  prefix: innerPrefix
+                });
+            });
+
+            return {
+              style,
+              textContent: replacements.join('')
+            };
+          });
+
+          const shield = document.createElement('style');
+          shield.textContent = shieldCss;
+          el.appendChild(shield);
+
+          tasks.forEach(({style, textContent}) => {
+            style.textContent = textContent;
           });
 
           shadowRoot.innerHTML = serializer.serializeToString(doc);
@@ -113,6 +197,137 @@ export function shadowDom(el) {
       };
     }
   };
+}
+
+function getFlatSelector(rule) {
+  switch (rule.type) {
+    case CSSRule.MEDIA_RULE:
+      return toArray(rule.cssRules).map(getFlatSelector).join(',');
+    case CSSRule.STYLE_RULE:
+      return rule.selectorText;
+    case CSSRule.SUPPORTS_RULE: {
+      return toArray(rule.cssRules).map(getFlatSelector).join(',');
+    }
+    default:
+      return '';
+  }
+}
+
+function getResolvedValue(style, propName, {animationResolutions, fontResolutions}) {
+  const value = style.getPropertyValue(propName);
+
+  switch (propName) {
+    case 'animation-name': {
+      const keyframes = find(animationResolutions, res => res.nameBefore === value);
+      return keyframes.name || value;
+    }
+    case 'font-family': {
+      const fontList = value.split(',').map(f => f.trim()).filter(Boolean);
+      const face = find(fontResolutions, r => some(fontList, f => r.nameBefore.replace(/("|')/g, '') === f));
+
+      return face
+        ? fontList.map(f => f === face.nameBefore.replace(/("|')/g, '') ? face.name : f)
+        : value;
+    }
+    default:
+      return value;
+  }
+}
+
+function scopeFontFaceRule(rule, {fontResolutions}) {
+  const face = find(fontResolutions, res => res.nameBefore === rule.style.getPropertyValue('font-family')) || rule;
+  const propNames = toArray(rule.style);
+
+  const body = propNames.map(propName => {
+    if (face && face.name && propName === 'font-family') {
+      return `${propName}: ${face.name};`;
+    }
+    return `${propName}: ${rule.style.getPropertyValue(propName)};`;
+  }).join('\n');
+
+  return `@font-face {${body}}`;
+}
+
+function scopeGroupingRule(rule, keyword, ctx) {
+  const rules = toArray(rule.cssRules);
+  const body = rules.map(r => scopeRule(r, ctx));
+  return `@${keyword} ${getGroupingCondition(rule, keyword)} {${body}}`;
+}
+
+function scopeKeyframeRule(rule, {animationResolutions}) {
+  const keyframes = find(animationResolutions, res => res.nameBefore === rule.name) || rule;
+  return `@keyframes ${keyframes.name} {${toArray(rule.cssRules).map(rule => rule.cssText).join('\n')}}`;
+}
+
+function scopeRule(rule, ctx) {
+  switch (rule.type) {
+    case CSSRule.FONT_FACE_RULE:
+      return scopeFontFaceRule(rule, ctx);
+    case CSSRule.KEYFRAMES_RULE:
+      return scopeKeyframeRule(rule, ctx);
+    case CSSRule.MEDIA_RULE:
+      return scopeGroupingRule(rule, 'media', ctx);
+    case CSSRule.STYLE_RULE:
+      return scopeStyleRule(rule, ctx)
+    case CSSRule.SUPPORTS_RULE: {
+      return scopeGroupingRule(rule, 'supports', ctx);
+    }
+  }
+}
+
+function scopeStyleRule(rule, {animationResolutions, fontResolutions, id, importantPropNames, prefix}) {
+  const propNames = toArray(rule.style);
+
+  const body = propNames.map(propName => {
+    const propValue = getResolvedValue(rule.style, propName, {animationResolutions, fontResolutions});
+
+    const propPriority = includes(importantPropNames, propName)
+      ? '!important'
+      : rule.style.getPropertyPriority(propName) === 'important' ? '!important' : '';
+
+    return `${propName}: ${propValue}${propPriority};`
+  });
+
+  return `${prefixSelectors(rule.selectorText, prefix)} {${body.join('')}}`;
+}
+
+function selectorInside(selector, {doc, el}) {
+  let current = selector;
+  let result = '';
+  let i = 0;
+
+  while(i < 10 && current !== '' && containsMatching(current, {doc, el})) {
+    i++;
+    const [head, tail] = popSelector(current);
+    result += tail;
+    current = head;
+  }
+
+  return result;
+}
+
+function selectorOutside(selector, {doc, el}) {
+  const inside = selectorInside(selector, {doc, el});
+  const head = selector.substring(0, selector.indexOf(inside));
+  return head;
+}
+
+function containsMatching(selector, {doc, el}) {
+  return some(toArray(doc.querySelectorAll(selector), 0), e => el.contains(e));
+}
+
+function popSelector(selector) {
+  let tail = '';
+
+  const transform = selectors => {
+    selectors.nodes.forEach(selector => {
+      tail = String(selector.last);
+      selector.last.remove();
+    });
+  };
+
+  const head = selectorParser(transform).processSync(selector);
+  return [head, tail];
 }
 
 function find(arr, predicate) {
@@ -142,10 +357,9 @@ function flattenRules(rules) {
         break;
       case CSSRule.MEDIA_RULE:
       case CSSRule.SUPPORTS_RULE:
-        Array.prototype.push.apply(acc, flattenRules(Array.prototype.slice.call(r.cssRules, 0)));
+        pushTo(acc, flattenRules(toArray(r.cssRules, 0)));
         break;
       default:
-        acc.push(r);
         return acc;
     }
     return acc;
@@ -154,7 +368,51 @@ function flattenRules(rules) {
 
 function getAll() {
   // TODO: filter some props as per spec
-  return Array.prototype.slice.call(window.getComputedStyle(document.body), 0);
+  return toArray(window.getComputedStyle(document.body), 0);
+}
+
+function isSamePath(a, b) {
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (let i = 0; i++; i < a.length) {
+    if (a[i] === b[i]) {
+      continue;
+    }
+    return false;
+  }
+  return true;
+}
+
+function getPathByElement(element, base) {
+  const selector = [];
+  let current = element;
+
+  while(current.parentNode && base ? current !== base : current.tagName.toLowerCase() !== 'body') {
+    let count = getElementIndex(current);
+    selector.unshift(count);
+    current = current.parentNode;
+  }
+
+  return selector;
+}
+
+function getElementByPath(elementPath, doc) {
+  return elementPath.reduce((el, index) => {
+    const childElements = toArray(el.childNodes, 0)
+      .filter(n => n.nodeType === Node.ELEMENT_NODE);
+    return childElements[index];
+  }, doc.body);
+}
+
+function getElementIndex(element) {
+  let index = 0;
+
+  while ((element = element.previousElementSibling)) {
+    index++;
+  }
+
+  return index;
 }
 
 function getHighestSpecificity(selectors) {
@@ -169,14 +427,10 @@ function getHighestSpecificity(selectors) {
 function getSelectors(rules) {
   return rules
     .filter(r => typeof r.selectorText === 'string')
-    .reduce((acc, o) => {
-      const s = o.selectorText.split(', ').map(s => s.trim());
-      Array.prototype.push.apply(acc, s);
-      return acc;
-    }, []);
+    .reduce((acc, o) => pushTo(acc, o.selectorText.split(', ').map(s => s.trim())), []);
 }
 
-function getCondition(rule, keyword) {
+function getGroupingCondition(rule, keyword) {
   if ('conditionText' in rule) {
     return rule.conditionText;
   }
@@ -202,7 +456,7 @@ function getValue() {
   doc.body.appendChild(el);
 
   const computed = win.getComputedStyle(el);
-  const props = Array.prototype.slice.call(computed, 0);
+  const props = toArray(computed, 0);
   const styles = props.reduce((acc, prop) => {
     acc[prop] = computed.getPropertyValue(prop);
     return acc;
@@ -217,12 +471,11 @@ function getValue() {
   };
 }
 
-function interrupt(el, {parent, prefixCount, noop, id}) {
+function interrupt(el, {parent, prefixCount, noop, id, initialFor}) {
   const all = supports('all');
   const initial = supports('initial');
 
   const props = (all && initial) ? ['all'] : getAll();
-  const initialFor = getValue();
 
   const style = document.createElement('style');
   style.setAttribute('data-shadow-dom-initial-id', id);
@@ -236,53 +489,16 @@ function interrupt(el, {parent, prefixCount, noop, id}) {
   // automated test runs, which does not happen for explicit values
   style.textContent = `
     ${prefix} {
-      ${props.map(prop => `${prop}: ${/*initial ? 'initial' : */initialFor(prop)}`).join(';\n')}
+      ${props.map(prop => `${prop}: ${initialFor(prop)}`).join(';\n')}
     }
   `;
-
-  const allRules = Array.prototype.slice.call(document.querySelectorAll('style'), 0)
-    .reduce((rules, style) => {
-      Array.prototype.push.apply(rules, style.sheet.cssRules);
-      return rules;
-    }, []);
-
-  const importantRules = flattenRules(allRules)
-    .filter(rule => 'style' in rule)
-    .filter((rule) => {
-      const propNames = Array.prototype.slice.call(rule.style, 0);
-      return some(propNames, propName => rule.style.getPropertyPriority(propName));
-    }, []);
-
-  const shield = importantRules.length > 0 ? document.createElement('style') : null;
-
-  if (importantRules.length > 0) {
-    shield.setAttribute('data-shadow-dom-shield-id', id);
-    shield.setAttribute('data-shadow-dom', true);
-    shield.textContent = interceptRules(importantRules, {initialFor, prefix}).join('\n');
-
-    parent.insertBefore(shield, parent.firstChild);
-  }
 
   parent.insertBefore(style, parent.firstChild);
 
   return {
     shadowRoot: el,
-    shieldRules: shield === null ? [] : Array.prototype.slice.call(shield.sheet.cssRules, 0)
+    shieldRules: []
   };
-}
-
-function interceptRules(...args) {
-  const [, context] = args;
-  const [rules, {initialFor, prefix}] = args;
-
-  return rules.map(rule => {
-    const propNames = Array.prototype.slice.call(rule.style, 0);
-    const content = `${prefixSelectors(rule.selectorText, prefix)} {
-      ${propNames.map(prop => `${prop}: ${initialFor(prop)}!important;`).join('\n')}
-    }`;
-
-    return wrapWithParents(content, rule);
-  })
 }
 
 function wrapWithParents(content, rule) {
@@ -323,13 +539,13 @@ function parseRules(css) {
   tmp.textContent = css;
   doc.body.appendChild(tmp);
 
-  const rules = Array.prototype.slice.call(tmp.sheet.cssRules, 0);
+  const rules = toArray(tmp.sheet.cssRules, 0);
 
   document.body.removeChild(frame);
   return rules;
 }
 
-function prefixSelectors(selectorText, prefix) {
+function prefixSelectors(selectorText, prefix = '', suffix = '') {
   return selectorText.split(',').map(s => `${prefix} ${s.trim()}`).join(', ');
 }
 
@@ -359,108 +575,12 @@ function repeat(string, count) {
   return result;
 }
 
-function scope(...args) {
-  const [, context] = args;
-  const [rules, {conflictingAnimations, conflictingFonts, effects, id, noop, prefixCount}] = args;
+function includes(arr, search) {
+  if (Array.prototype.includes) {
+    return arr.includes(search);
+  }
 
-  const animationResolutions = conflictingAnimations.map(animation => {
-    return {
-      nameBefore: animation.name,
-      name: shortid.generate(),
-      cssRules: animation.cssRules
-    };
-  });
-
-  const fontResolutions = conflictingFonts.map(font => {
-    const family = font.style.getPropertyValue('font-family');
-    const name = shortid.generate();
-
-    return {
-      nameBefore: family.replace(/("|')/g, ''),
-      name,
-      style: font.style
-    };
-  });
-
-  return rules.map((rule, index) => {
-    switch(rule.type) {
-      case CSSRule.FONT_FACE_RULE: {
-        const face = find(fontResolutions, res => res.nameBefore === rule.style.getPropertyValue('font-family')) || rule;
-        const propNames = Array.prototype.slice.call(face.style, 0);
-        const body = propNames.map(propName => {
-          if (face.name && propName === 'font-family') {
-            return `${propName}: ${face.name};`;
-          }
-          return `${propName}: ${face.style.getPropertyValue(propName)};`;
-        }).join('\n');
-        return `@font-face {${body}}`;
-      }
-      case CSSRule.KEYFRAMES_RULE: {
-        const keyframes = find(animationResolutions, res => res.nameBefore === rule.name) || rule;
-        return `@keyframes ${keyframes.name} {${Array.prototype.slice.call(keyframes.cssRules, 0).map(rule => rule.cssText).join('\n')}}`;
-      }
-      case CSSRule.MEDIA_RULE: {
-        const mediaRules = Array.prototype.slice.call(rule.cssRules);
-        return `@media ${getCondition(rule, 'media')} {${scope(mediaRules, context)}}`;
-      }
-      case CSSRule.SUPPORTS_RULE: {
-        const mediaRules = Array.prototype.slice.call(rule.cssRules);
-        return `@supports ${getCondition(rule, 'supports')} {${scope(mediaRules, context)}}`;
-      }
-      case CSSRule.STYLE_RULE: {
-        // TODO: simplify this, perhaps a facade in front of CSSRule is in order
-        const affectedPropNames = effects
-          .reduce((acc, effect) => {
-            const rs = effect.affectedRules.filter(a => a.rule === rule);
-            Array.prototype.push.apply(acc, rs.reduce((a, r) => {
-              Array.prototype.push.apply(a, r.props);
-              return a;
-            }, []));
-            return acc;
-          }, []);
-
-        const propNames = Array.prototype.slice.call(rule.style, 0);
-
-        const body = propNames.map(propName => {
-          const priority = affectedPropNames.indexOf(propName) > -1 ||
-            rule.style.getPropertyPriority(propName) === 'important' ? '!important' : '';
-
-          if (propName === 'animation-name') {
-            const nameBefore = rule.style.getPropertyValue('animation-name');
-            const keyframes = find(animationResolutions, res => res.nameBefore === nameBefore);
-            if (keyframes) {
-              return `animation-name: ${keyframes.name}${priority}${priority};`;
-            }
-          }
-
-          if (propName === 'font-family') {
-            const fontList = rule.style.getPropertyValue('font-family')
-              .split(',')
-              .map(f => f.trim())
-              .filter(Boolean);
-
-            const face = find(fontResolutions, r => some(fontList, f => r.nameBefore === f));
-
-            if (face) {
-              const list = fontList.map(f => f === face.nameBefore ? face.name : f);
-              return `font-family: ${list.join(', ')}`;
-            }
-          }
-
-          return `${propName}: ${rule.style.getPropertyValue(propName)}${priority};`;
-        }).join('\n');
-
-        const prefixOffset = affectedPropNames.length > 0 ? 1 : 0;
-
-        const count = prefixCount + prefixOffset;
-        const prefix = `[data-shadow-dom-root="${id}"]${range(count, `:not(#${noop})`).join('')}` // range(prefixCount + prefixOffset, `#${id}`).join(' + ');
-
-        return `${prefixSelectors(rule.selectorText, prefix)} {${body}}`;
-      }
-      default:
-        return rule.cssText;
-    }
-  });
+  return arr.indexOf(search) > -1;
 }
 
 function some(arr, predicate) {
@@ -531,6 +651,15 @@ function supports(feature) {
     default:
       throw new TypeError(`supports: unknown feature "${feature}".`);
   }
+}
+
+function toArray(input) {
+  return Array.prototype.slice.call(input, 0);
+}
+
+function pushTo(to, from) {
+  Array.prototype.push.apply(to, from);
+  return to;
 }
 
 function unprefixSelectors(selectorText, prefix) {
