@@ -2,13 +2,18 @@
   "name": "shadow-dom",
   "version": "1.0.0",
   "description": "A shadow-dom ponyfill",
+  "browser": "./browser.js",
   "scripts": {
+    "build": "npm run pack && npm run babel",
+    "pack": "webpack",
     "babel": "babel src.js > index.js",
     "test": "karma start karma.local.js",
     "test:remote": "karma start karma.remote.js"
   },
   "babel": {
-    "plugins": ["transform-object-assign"],
+    "plugins": [
+      "transform-object-assign"
+    ],
     "presets": [
       [
         "env",
@@ -58,6 +63,7 @@
     "karma-webpack": "^2.0.5",
     "puppeteer": "^0.13.0",
     "raw-loader": "^0.5.1",
+    "uglifyjs-webpack-plugin": "^1.1.2",
     "webpack": "^3.8.0"
   },
   "dependencies": {
