@@ -323,20 +323,6 @@ function containsMatching(selector, {doc, el}) {
   return some(toArray(doc.querySelectorAll(selector), 0), e => el.contains(e));
 }
 
-function popSelector(selector) {
-  let tail = '';
-
-  const transform = selectors => {
-    selectors.nodes.forEach(selector => {
-      tail = String(selector.last);
-      selector.last.remove();
-    });
-  };
-
-  const head = selectorParser(transform).processSync(selector);
-  return [head, tail];
-}
-
 function find(arr, predicate) {
   if (Array.prototype.find) {
     return arr.find(predicate);
