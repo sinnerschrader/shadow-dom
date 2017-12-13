@@ -12,7 +12,7 @@ module.exports = {
         test: /\.html?$/,
         loader: 'raw-loader'
       }
-    ],
+    ]
   },
   output: {
     filename: 'browser.js',

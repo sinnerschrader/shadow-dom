@@ -2,7 +2,7 @@ import selectorParser from 'postcss-selector-parser';
 import shortid from 'shortid';
 import specificity from 'specificity';
 
-export function shadowDom(el) {
+export function shadowDom(el) { // eslint-disable-line import/prefer-default-export
   const parser = new DOMParser();
   const serializer = new XMLSerializer();
 
@@ -22,9 +22,8 @@ export function shadowDom(el) {
   );
 
   const prefixCount = Math.max(Math.ceil(getHighestSpecificity(getSelectors(initialOuterRules)) / 100), 1);
-  const prefix = `[data-shadow-dom-root="${id}"]:not(#${noop})`;
 
-  const {shadowRoot, shieldRules} = interrupt(document.createElement('div'), {id, initialFor, noop, prefixCount, parent: el});
+  const {shadowRoot} = interrupt(document.createElement('div'), {id, initialFor, noop, prefixCount, parent: el});
   shadowRoot.setAttribute('data-shadow-dom-root', id);
   shadowRoot.innerHTML = '';
 
@@ -37,16 +36,11 @@ export function shadowDom(el) {
           const doc = parser.parseFromString(innerHTML, 'text/html');
           const outerDoc = parser.parseFromString(document.documentElement.outerHTML, 'text/html');
 
-          const outerRules = toArray(outerDoc.querySelectorAll('style'), 0).reduce((rs, s) => pushTo(rs, s.sheet.cssRules), [])
+          const outerRules = toArray(outerDoc.querySelectorAll('style'), 0).reduce((rs, s) => pushTo(rs, s.sheet.cssRules), []);
           const outerAnimations = outerRules.filter(rule => rule.type === CSSRule.KEYFRAMES_RULE);
           const outerFonts = outerRules.filter(rule => rule.type === CSSRule.FONT_FACE_RULE);
-
           const flattenOuterRules = flattenRules(outerRules);
-
           const innerRules = toArray(doc.querySelectorAll('style'), 0).reduce((rs, s) => pushTo(rs, s.sheet.cssRules), []);
-          const flattenInnerRules = flattenRules(innerRules);
-
-          const prefixCount = Math.max(Math.ceil(getHighestSpecificity(getSelectors(flattenOuterRules)) / 100), 1);
           const prefix = `[data-shadow-dom-root="${id}"]:not(#${noop})`;
 
           const mount = getElementByPath(getPathByElement(el), outerDoc);
@@ -66,7 +60,7 @@ export function shadowDom(el) {
               return acc;
             }, [])
             .map(rule => {
-              const affectedElements = toArray(outerDoc.querySelectorAll(rule.selectorText), 0).filter(el => mount.contains(el))
+              const affectedElements = toArray(outerDoc.querySelectorAll(rule.selectorText), 0).filter(el => mount.contains(el));
               return {
                 affectedElements,
                 rule
@@ -92,16 +86,16 @@ export function shadowDom(el) {
             const content = `
               ${selector} {
                 ${propNames.map(prop => {
-                  const priority = rule.style.getPropertyPriority(prop) === 'important' ? '!important' : ''
-                  return `${prop}: ${initialFor(prop)}${priority};`
+                  const priority = rule.style.getPropertyPriority(prop) === 'important' ? '!important' : '';
+                  return `${prop}: ${initialFor(prop)}${priority};`;
                 }).join('\n')}
             }`;
-            return wrapWithParents(content, rule)
+            return wrapWithParents(content, rule);
           }).join('\n');
 
           const styles = toArray(doc.querySelectorAll('style'), 0);
           const mostSpecificShield = shielding.sort((a, b) => specificity.compare(a.specificity, b.specificity))[0];
-          const factor = mostSpecificShield ? Math.max(Math.ceil(parseInt(mostSpecificShield.specificity.join('')) / 100), 1) : 1;
+          const factor = mostSpecificShield ? Math.max(Math.ceil(parseInt(mostSpecificShield.specificity.join(''), 10) / 100), 1) : 1;
           const innerPrefix = `[data-shadow-dom-root="${id}"]${range(factor, `:not(#${noop})`).join('')}`;
 
           const animationResolutions = innerRules
@@ -125,7 +119,7 @@ export function shadowDom(el) {
           const tasks = styles.map(style => {
             const rawRules = toArray(style.sheet.cssRules, 0);
 
-            const rules = rawRules.reduce((acc, rule) => {
+            const rules = rawRules.reduce((acc, rule) => {
               if (rule.type === CSSRule.STYLE_RULE) {
                 rule.selectorText.split(',').map(s => s.trim()).forEach(selector => {
                   acc.push({
@@ -145,9 +139,9 @@ export function shadowDom(el) {
             const replacements = rules.map(rule => {
               const selector = getFlatSelector(rule);
 
-              const matchedElements = selector
-                ? toArray(outerDoc.querySelectorAll(selector)).filter(node => mount.contains(node))
-                : [];
+              const matchedElements = selector ?
+                toArray(outerDoc.querySelectorAll(selector)).filter(node => mount.contains(node)) :
+                [];
 
               // TODO Extract important props from this
               const importantPropNames = shielding
@@ -157,14 +151,14 @@ export function shadowDom(el) {
                   return pushTo(acc, toArray(style).filter(isImportant));
                 }, []);
 
-                return scopeRule(rule, {
-                  animationResolutions,
-                  fontResolutions,
-                  id,
-                  importantPropNames,
-                  noop,
-                  prefix: innerPrefix
-                });
+              return scopeRule(rule, {
+                animationResolutions,
+                fontResolutions,
+                id,
+                importantPropNames,
+                noop,
+                prefix: innerPrefix
+              });
             });
 
             return {
@@ -223,9 +217,9 @@ function getResolvedValue(style, propName, {animationResolutions, fontResolution
       const fontList = value.split(',').map(f => f.trim()).filter(Boolean);
       const face = find(fontResolutions, r => some(fontList, f => r.nameBefore.replace(/("|')/g, '') === f));
 
-      return face
-        ? fontList.map(f => f === face.nameBefore.replace(/("|')/g, '') ? face.name : f)
-        : value;
+      return face ?
+        fontList.map(f => f === face.nameBefore.replace(/("|')/g, '') ? face.name : f) :
+        value;
     }
     default:
       return value;
@@ -266,24 +260,26 @@ function scopeRule(rule, ctx) {
     case CSSRule.MEDIA_RULE:
       return scopeGroupingRule(rule, 'media', ctx);
     case CSSRule.STYLE_RULE:
-      return scopeStyleRule(rule, ctx)
+      return scopeStyleRule(rule, ctx);
     case CSSRule.SUPPORTS_RULE: {
       return scopeGroupingRule(rule, 'supports', ctx);
     }
+    default:
+      return rule.cssText;
   }
 }
 
-function scopeStyleRule(rule, {animationResolutions, fontResolutions, id, importantPropNames, prefix}) {
+function scopeStyleRule(rule, {animationResolutions, fontResolutions, importantPropNames, prefix}) {
   const propNames = toArray(rule.style);
 
   const body = propNames.map(propName => {
     const propValue = getResolvedValue(rule.style, propName, {animationResolutions, fontResolutions});
 
-    const propPriority = includes(importantPropNames, propName)
-      ? '!important'
-      : rule.style.getPropertyPriority(propName) === 'important' ? '!important' : '';
+    const propPriority = includes(importantPropNames, propName) ?
+      '!important' :
+      rule.style.getPropertyPriority(propName) === 'important' ? '!important' : '';
 
-    return `${propName}: ${propValue}${propPriority};`
+    return `${propName}: ${propValue}${propPriority};`;
   });
 
   return `${prefixSelectors(rule.selectorText, prefix)} {${body.join('')}}`;
@@ -294,8 +290,7 @@ function selectorInside(selector, {doc, el}) {
   let result = '';
   let i = 0;
 
-  while(i < 10 && current !== '' && containsMatching(current, {doc, el})) {
-    i++;
+  while (current !== '' && containsMatching(current, {doc, el})) {
     const [head, tail] = popSelector(current);
     result += tail;
     current = head;
@@ -369,25 +364,12 @@ function getAll() {
   return toArray(window.getComputedStyle(document.body), 0);
 }
 
-function isSamePath(a, b) {
-  if (a.length !== b.length) {
-    return false;
-  }
-  for (let i = 0; i++; i < a.length) {
-    if (a[i] === b[i]) {
-      continue;
-    }
-    return false;
-  }
-  return true;
-}
-
 function getPathByElement(element, base) {
   const selector = [];
   let current = element;
 
-  while(current.parentNode && base ? current !== base : current.tagName.toLowerCase() !== 'body') {
-    let count = getElementIndex(current);
+  while (current.parentNode && base ? current !== base : current.tagName.toLowerCase() !== 'body') {
+    const count = getElementIndex(current);
     selector.unshift(count);
     current = current.parentNode;
   }
@@ -433,7 +415,7 @@ function getGroupingCondition(rule, keyword) {
     return rule.conditionText;
   }
 
-  const reg = new RegExp(`@${keyword}\s?([^{]+)\s?`, 'i');
+  const reg = new RegExp(`@${keyword}s?([^{]+)s?`, 'i');
   const result = reg.exec(rule.cssText);
 
   if (result === null) {
@@ -461,11 +443,11 @@ function getValue() {
   }, {});
 
   document.body.removeChild(frame);
-  return (prop) => {
+  return prop => {
     if (prop === 'all') {
       return 'initial';
     }
-    return styles[prop]
+    return styles[prop];
   };
 }
 
@@ -502,14 +484,16 @@ function interrupt(el, {parent, prefixCount, noop, id, initialFor}) {
 function wrapWithParents(content, rule) {
   let result = content;
 
-  while(rule.parentRule) {
+  while (rule.parentRule) {
     rule = rule.parentRule;
     switch (rule.type) {
       case CSSRule.MEDIA_RULE:
-        result = `@media ${getCondition(rule, 'media')} { ${content} }`;
+        result = `@media ${getGroupingCondition(rule, 'media')} { ${content} }`;
         break;
       case CSSRule.SUPPORTS_RULE:
-        result = `@supports ${getCondition(rule, 'supports')} { ${content} }`;
+        result = `@supports ${getGroupingCondition(rule, 'supports')} { ${content} }`;
+        break;
+      default:
         break;
     }
   }
@@ -517,33 +501,7 @@ function wrapWithParents(content, rule) {
   return result;
 }
 
-function matches(el, selector) {
-  if ('matches' in el) {
-    return el.matches(selector);
-  }
-  if ('msMatchesSelector' in el) {
-    return el.msMatchesSelector(selector);
-  }
-  throw new TypeError('Element.prototype.matches is not supported.');
-}
-
-function parseRules(css) {
-  const frame = document.createElement('iframe');
-  document.body.appendChild(frame);
-
-  const doc = frame.contentDocument;
-
-  const tmp = doc.createElement('style');
-  tmp.textContent = css;
-  doc.body.appendChild(tmp);
-
-  const rules = toArray(tmp.sheet.cssRules, 0);
-
-  document.body.removeChild(frame);
-  return rules;
-}
-
-function prefixSelectors(selectorText, prefix = '', suffix = '') {
+function prefixSelectors(selectorText, prefix = '') {
   return selectorText.split(',').map(s => `${prefix} ${s.trim()}`).join(', ');
 }
 
@@ -561,18 +519,6 @@ function range(count, fill) {
   return result;
 }
 
-function repeat(string, count) {
-  if (typeof String.prototype.repeat === 'function') {
-    return string.repeat(count);
-  }
-
-  let result = '';
-  for (let i = 0; i < count; i++) {
-    result += string;
-  }
-  return result;
-}
-
 function includes(arr, search) {
   if (Array.prototype.includes) {
     return arr.includes(search);
@@ -586,7 +532,7 @@ function some(arr, predicate) {
     return arr.some(predicate);
   }
 
-  if (arr == null) {
+  if (arr === null) {
     throw new TypeError('Array.prototype.some called on null or undefined');
   }
 
@@ -598,7 +544,7 @@ function some(arr, predicate) {
   const len = t.length >>> 0;
 
   for (let i = 0; i < len; i++) {
-    if (i in t && fun(t[i], i, t)) {
+    if (i in t && predicate(t[i], i, t)) {
       return true;
     }
   }
@@ -619,7 +565,7 @@ function supports(feature) {
     }
   }
 
-  switch(feature) {
+  switch (feature) {
     case 'all': {
       const el = document.createElement('div');
       return 'all' in el.style;
@@ -658,8 +604,4 @@ function toArray(input) {
 function pushTo(to, from) {
   Array.prototype.push.apply(to, from);
   return to;
-}
-
-function unprefixSelectors(selectorText, prefix) {
-  return selectorText.replace(/'/g, '"').split(',').map(s => s.replace(prefix, '').trim()).join(' ');
 }

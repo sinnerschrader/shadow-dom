@@ -1,9 +1,10 @@
+/* global it, expect, viewport */
 import {shadowDom} from './src';
 
 const HAS_SHADOWDOM = ('attachShadow' in document.createElement('div'));
 
 it('should exist', () => {
-    expect(shadowDom).toBeDefined();
+  expect(shadowDom).toBeDefined();
 });
 
 it('has a shadowRoot property', () => {
@@ -62,10 +63,10 @@ it('scopes against high specificity styling', () => {
   }
 
   cleanup();
-})
+});
 
 it('prevents bleeding', () => {
-  const {scope, cleanup} = fixture('bleeding-scope');
+  const {cleanup} = fixture('bleeding-scope');
 
   if (!HAS_SHADOWDOM) {
     const b = document.body.querySelector('.b');
@@ -112,9 +113,6 @@ it('prevents bleeding via supports queries', () => {
   const {scope, cleanup} = fixture('bleeding-scope-supports-basic');
 
   if (!HAS_SHADOWDOM) {
-    const outer = document.body.querySelector('.b');
-    const outerColor = window.getComputedStyle(outer).getPropertyValue('color');
-
     const inner = scope.shadowRoot.querySelector('.b');
     const innerColor = window.getComputedStyle(inner).getPropertyValue('color');
     const expected = (window.CSS && ('supports' in CSS)) ? 'rgb(255, 0, 0)' : 'rgb(0, 0, 255)';
@@ -165,7 +163,6 @@ it('preserves specifity relations as found', () => {
     const aBack = window.getComputedStyle(a).getPropertyValue('background-color');
     const bColor = window.getComputedStyle(b).getPropertyValue('color');
     const bBack = window.getComputedStyle(b).getPropertyValue('background-color');
-
 
     expect(aColor).toBe('rgb(0, 128, 0)');
     expect(bColor).toBe('rgb(255, 0, 0)');
@@ -233,7 +230,6 @@ it('protects from !important rules in media queries > 500px', () => {
   cleanup();
   viewport.reset();
 });
-
 
 it('protects animations from name collisions', () => {
   const {scope, cleanup} = fixture('globals-animation');
