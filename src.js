@@ -2,13 +2,11 @@ import selectorParser from 'postcss-selector-parser';
 import shortid from 'shortid';
 import specificity from 'specificity';
 
-const parser = new DOMParser();
-const serializer = new XMLSerializer();
-
-const SUPPORTS_SHADOW_DOM = ('attachShadow' in HTMLElement.prototype);
-
 export function shadowDom(el) {
-  if (SUPPORTS_SHADOW_DOM) {
+  const parser = new DOMParser();
+  const serializer = new XMLSerializer();
+
+  if ('attachShadow' in HTMLElement.prototype) {
     el.attachShadow({mode: 'open'});
     return el;
   }

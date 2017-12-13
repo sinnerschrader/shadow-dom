@@ -15,7 +15,8 @@ module.exports = {
     ],
   },
   output: {
-    filename: 'browser.js'
+    filename: 'browser.js',
+    libraryTarget: 'commonjs2'
   },
   plugins: [
     new UglifyJsPlugin()
