@@ -1,0 +1,38 @@
+<style>
+  style, script {
+    content: "This should be visible";
+    display: block!important;
+    border: 1px dotted currentColor!important;
+    font-family: monospace!important;
+    white-space: pre!important;
+  }
+  style {
+    color: blue;
+  }
+  script {
+    color: green;
+  }
+</style>
+<script>
+  ("script: This should be visible in green")
+</script>
+<div>
+  <div class="shadow-dom">
+    <style>
+      #foobar {
+        content: 'This should not be visible';
+      }
+      style, script {
+        background: red;
+        color: white;
+        padding: 10px;
+        font-family: monospace;
+        white-space: pre-wrap;
+        margin-bottom: 10px;
+      }
+    </style>
+    <script>
+      ("This should not be visible")
+    </script>
+  </div>
+</div>

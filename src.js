@@ -39,14 +39,9 @@ export function shadowDom(el) { // eslint-disable-line import/prefer-default-exp
           const outerRules = toArray(outerDoc.querySelectorAll('style'), 0).reduce((rs, s) => pushTo(rs, s.sheet.cssRules), []);
           const outerAnimations = outerRules.filter(rule => rule.type === CSSRule.KEYFRAMES_RULE);
           const outerFonts = outerRules.filter(rule => rule.type === CSSRule.FONT_FACE_RULE);
-          const flattenOuterRules = flattenRules(outerRules);
           const innerRules = toArray(doc.querySelectorAll('style'), 0).reduce((rs, s) => pushTo(rs, s.sheet.cssRules), []);
           const prefix = `[data-shadow-dom-root="${id}"]:not(#${noop})`;
-
-          const mount = getElementByPath(getPathByElement(el), outerDoc);
-          mount.innerHTML = innerHTML;
-
-          const shielding = flattenOuterRules
+          const flattenedOuterRules = flattenRules(outerRules)
             .reduce((acc, r) => {
               r.selectorText.split(',')
                 .map(s => s.trim())
@@ -58,7 +53,12 @@ export function shadowDom(el) { // eslint-disable-line import/prefer-default-exp
                   });
                 });
               return acc;
-            }, [])
+            }, []);
+
+          const mount = getElementByPath(getPathByElement(el), outerDoc);
+          mount.innerHTML = innerHTML;
+
+          const shielding = flattenedOuterRules
             .map(rule => {
               const affectedElements = toArray(outerDoc.querySelectorAll(rule.selectorText), 0).filter(el => mount.contains(el));
               return {
@@ -81,17 +81,23 @@ export function shadowDom(el) { // eslint-disable-line import/prefer-default-exp
               };
             });
 
-          const shieldCss = shielding.map(({rule, selector}) => {
-            const propNames = toArray(rule.style, 0);
-            const content = `
-              ${selector} {
-                ${propNames.map(prop => {
-                  const priority = rule.style.getPropertyPriority(prop) === 'important' ? '!important' : '';
-                  return `${prop}: ${initialFor(prop)}${priority};`;
-                }).join('\n')}
-            }`;
-            return wrapWithParents(content, rule);
-          }).join('\n');
+          const shieldCss = `
+            ${shielding.map(({rule, selector}) => {
+              const propNames = toArray(rule.style, 0);
+              const content = `
+                ${selector} {
+                  ${propNames.map(prop => {
+                    const priority = rule.style.getPropertyPriority(prop) === 'important' ? '!important' : '';
+                    return `${prop}: ${initialFor(prop)}${priority};`;
+                  }).join('\n')}
+              }`;
+              return wrapWithParents(content, rule);
+            }).join('\n')}
+            ${prefix} script,
+            ${prefix} style {
+              display: none!important;
+            }
+          `;
 
           const styles = toArray(doc.querySelectorAll('style'), 0);
           const mostSpecificShield = shielding.sort((a, b) => specificity.compare(a.specificity, b.specificity))[0];
@@ -168,8 +174,10 @@ export function shadowDom(el) { // eslint-disable-line import/prefer-default-exp
           });
 
           const shield = document.createElement('style');
+          shield.setAttribute('data-shadow-dom-shield', id);
+          shield.setAttribute('data-shadow-dom', true);
           shield.textContent = shieldCss;
-          el.appendChild(shield);
+          el.insertBefore(shield, el.firstChild);
 
           tasks.forEach(({style, textContent}) => {
             style.textContent = textContent;
@@ -467,18 +475,23 @@ function interrupt(el, {parent, prefixCount, noop, id, initialFor}) {
   const props = (all && initial) ? ['all'] : getAll();
 
   const style = document.createElement('style');
-  style.setAttribute('data-shadow-dom-initial-id', id);
+  style.setAttribute('data-shadow-dom-initial', id);
   style.setAttribute('data-shadow-dom', true);
 
-  const prefix = `[data-shadow-dom-root="${id}"]${range(prefixCount, `:not(#${noop})`).join('')}`;
+  const escalator = range(prefixCount, `:not(#${noop})`).join('');
+  const prefix = ``;
 
   // Edge 15..17 is currently the only browser that
   // does *NOT* support "all" but "initial".
   // Turns out initial is slow to an extent that it froze
   // automated test runs, which does not happen for explicit values
   style.textContent = `
-    ${prefix} {
+    [data-shadow-dom-root="${id}"]${escalator} {
       ${props.map(prop => `${prop}: ${initialFor(prop)}`).join(';\n')}
+    }
+    [data-shadow-dom-initial="${id}"]${escalator},
+    [data-shadow-dom-shield="${id}"]${escalator} {
+      display: none!important;
     }
   `;
 

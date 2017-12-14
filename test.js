@@ -292,6 +292,18 @@ it('encapsulates against selectors matching mount point', () => {
   cleanup();
 });
 
+it('protects default-hidden elements against revealing styles', () => {
+  const {scope, cleanup} = fixture('hidden-elements');
+
+  if (!HAS_SHADOWDOM) {
+    const inner = Array.prototype.slice.call(document.querySelectorAll('.shadow-dom style, .shadow-dom script'), 0);
+    const visible = inner.filter(i => i.offsetParent !== null);
+    expect(visible.length).toBe(0);
+  }
+
+  cleanup();
+});
+
 function fixture(name) {
   const html = require(`./fixtures/${name}.html`);
   return setup(html);
