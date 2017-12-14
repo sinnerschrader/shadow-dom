@@ -1,0 +1,18 @@
+<style>
+    .a::before {
+      content: 'outer';
+      color: red;
+    }
+  </style>
+<div class="a">
+  <div class="shadow-dom">
+    <style>
+      .b::before {
+        content: 'inner';
+        color: green;
+      }
+    </style>
+    <p class="b">
+    </p>
+  </div>
+</div>

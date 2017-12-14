@@ -53,7 +53,7 @@ it('enforces basic scoping for pseudo elements', () => {
     expect(['0px', 'auto']).toContain(after); // signals being not visible
   }
 
-  // cleanup();
+  cleanup();
 });
 
 it('respects styling of inner scope', () => {
@@ -63,6 +63,18 @@ it('respects styling of inner scope', () => {
     const b = scope.shadowRoot.querySelector('.b');
     const color = window.getComputedStyle(b).getPropertyValue('color');
     expect(color).toBe('rgb(0, 128, 0)');
+  }
+
+  cleanup();
+});
+
+it('respects styling of inner scope pseudo elements', () => {
+  const {scope, cleanup} = fixture('inner-scope-pseudo-elements');
+
+  if (!HAS_SHADOWDOM) {
+    const b = scope.shadowRoot.querySelector('.b');
+    const beforeColor = window.getComputedStyle(b, ':before').getPropertyValue('color');
+    expect(beforeColor).toBe('rgb(0, 128, 0)');
   }
 
   cleanup();
