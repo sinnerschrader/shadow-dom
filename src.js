@@ -183,6 +183,9 @@ export function shadowDom(el) { // eslint-disable-line import/prefer-default-exp
         querySelector(...args) {
           return shadowRoot.querySelector(...args);
         },
+        querySelectorAll(...args) {
+          return shadowRoot.querySelectorAll(...args);
+        },
         toString() {
           return shadowRoot.toString();
         }
