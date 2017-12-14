@@ -53,7 +53,7 @@ it('enforces basic scoping for pseudo elements', () => {
     expect(['0px', 'auto']).toContain(after); // signals being not visible
   }
 
-  cleanup();
+  // cleanup();
 });
 
 it('respects styling of inner scope', () => {
@@ -84,9 +84,9 @@ it('prevents bleeding', () => {
   const {cleanup} = fixture('bleeding-scope');
 
   if (!HAS_SHADOWDOM) {
-    const b = document.body.querySelector('.b');
+    const b = document.querySelector('[data-test-name="bleeding-scope"] .b');
     const color = window.getComputedStyle(b).getPropertyValue('color');
-    expect(color).toBe('rgb(255, 0, 0)');
+    expect(color).toBe('rgb(0, 128, 0)');
   }
 
   cleanup();
@@ -230,14 +230,15 @@ it('protects animations from name collisions', () => {
   const {scope, cleanup} = fixture('globals-animation');
 
   if (!HAS_SHADOWDOM) {
-    const outer = document.querySelector('.a');
+    const ctx = document.querySelector('[data-test-name="globals-animation"]');
+    const outer = document.querySelector('[data-test-name="globals-animation"] .a');
     const inner = scope.shadowRoot.querySelector('.b');
 
     const outerAnimationName = window.getComputedStyle(outer).getPropertyValue('animation-name');
     const innerAnimationName = window.getComputedStyle(inner).getPropertyValue('animation-name');
 
-    const [outerAnimation] = getKeyFrames(outerAnimationName);
-    const [innerAnimation] = getKeyFrames(innerAnimationName);
+    const [outerAnimation] = getKeyFrames(outerAnimationName, ctx);
+    const [innerAnimation] = getKeyFrames(innerAnimationName, ctx);
 
     expect(outerAnimationName).toBe('a');
     expect(innerAnimationName).not.toBe('a');
@@ -274,7 +275,7 @@ it('encapsulates against selectors matching mount point', () => {
   const {scope, cleanup} = fixture('mount-selector');
 
   if (!HAS_SHADOWDOM) {
-    const outer = document.querySelector('.a');
+    const outer = document.querySelector('[data-test-name="mount-selector"] .a');
     const inner = scope.shadowRoot.querySelector('.b');
     const innerColor = window.getComputedStyle(inner).getPropertyValue('color');
     expect(innerColor).toBe('rgb(0, 128, 0)');
@@ -287,7 +288,7 @@ it('protects default-hidden elements against revealing styles', () => {
   const {scope, cleanup} = fixture('hidden-elements');
 
   if (!HAS_SHADOWDOM) {
-    const inner = Array.prototype.slice.call(document.querySelectorAll('.shadow-dom style, .shadow-dom script'), 0);
+    const inner = Array.prototype.slice.call(document.querySelectorAll('[data-testname="hidden-elements"] .shadow-dom style, [data-testname="hidden-elements"] .shadow-dom script'), 0);
     const visible = inner.filter(i => i.offsetParent !== null);
     expect(visible.length).toBe(0);
   }
@@ -297,11 +298,11 @@ it('protects default-hidden elements against revealing styles', () => {
 
 function fixture(name) {
   const html = require(`./fixtures/${name}.html`);
-  return setup(html);
+  return setup(html, {name});
 }
 
-function getAnimation(animationName) {
-  const styles = Array.prototype.slice.call(document.querySelectorAll('style'), 0);
+function getAnimation(animationName, ctx) {
+  const styles = Array.prototype.slice.call(ctx.querySelectorAll('style'), 0);
   const animations = styles
     .reduce((acc, s) => {
       Array.prototype.push.apply(acc, s.sheet.cssRules);
@@ -318,8 +319,8 @@ function getFontList(element) {
   return fontFamily.split(',').map(f => f.trim());
 }
 
-function getKeyFrames(animationName) {
-  const animation = getAnimation(animationName);
+function getKeyFrames(animationName, ctx) {
+  const animation = getAnimation(animationName, ctx);
 
   if (!animation) {
     return [];
@@ -328,8 +329,11 @@ function getKeyFrames(animationName) {
   return Array.prototype.slice.call(animation.cssRules, 0);
 }
 
-function setup(html) {
+function setup(html, options) {
   const el = document.createElement('div');
+  if (options && options.name) {
+    el.setAttribute('data-test-name', options.name);
+  }
 
   if (html) {
     el.innerHTML = html;
