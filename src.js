@@ -286,7 +286,13 @@ function scopeStyleRule(rule, {animationResolutions, fontResolutions, importantP
 }
 
 function selectorInside(selector, {doc, el}) {
-  const selectors = parseSelector(selector).map((node, index, nodes) => nodes.slice(index).reverse().map(n => String(n)).join(''));
+  const selectors = parseSelector(selector)
+    .map((node, index, nodes) => nodes.slice(index).reverse().map(n => String(n)).join(''))
+    .filter(selector => {
+      const trimmed = selector.trim();
+      return !includes(['~', '+', '>'], trimmed[trimmed.length - 1]);
+    });
+
   const index = selectors.findIndex(s => !containsMatching(s, {doc, el}));
   const nonMatch = selectors[index];
 
