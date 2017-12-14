@@ -279,9 +279,17 @@ it('encapsulates against selectors matching mount point', () => {
   const {scope, cleanup} = fixture('mount-selector');
 
   if (!HAS_SHADOWDOM) {
+    const outer = document.querySelector('.a');
+    const inner = scope.shadowRoot.querySelector('.b');
+
+    const outerColor = window.getComputedStyle(outer).getPropertyValue('color');
+    const innerColor = window.getComputedStyle(inner).getPropertyValue('color');
+
+    expect(outerColor).toBe('rgb(0, 0, 0)');
+    expect(innerColor).toBe('rgb(0, 128, 0)');
   }
 
-  // cleanup();
+  cleanup();
 });
 
 function fixture(name) {
