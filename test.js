@@ -270,6 +270,20 @@ it('protects fonts from name collisions', () => {
   cleanup();
 });
 
+it('handles invalid css selectors gracefully', () => {
+  const {cleanup} = fixture('invalid-selectors'); // does not throw
+  cleanup();
+});
+
+it('encapsulates against selectors matching mount point', () => {
+  const {scope, cleanup} = fixture('mount-selector');
+
+  if (!HAS_SHADOWDOM) {
+  }
+
+  // cleanup();
+});
+
 function fixture(name) {
   const html = require(`./fixtures/${name}.html`);
   return setup(html);
