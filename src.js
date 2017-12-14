@@ -6,12 +6,12 @@ export function shadowDom(el) { // eslint-disable-line import/prefer-default-exp
   const parser = new DOMParser();
   const serializer = new XMLSerializer();
 
+  el.innerHTML = '';
+
   if ('attachShadow' in HTMLElement.prototype) {
     el.attachShadow({mode: 'open'});
     return el;
   }
-
-  el.innerHTML = '';
 
   const id = shortid.generate();
   const noop = shortid.generate();
@@ -100,9 +100,10 @@ export function shadowDom(el) { // eslint-disable-line import/prefer-default-exp
           `;
 
           const styles = toArray(doc.querySelectorAll('style'), 0);
-          const mostSpecificShield = shielding.sort((a, b) => specificity.compare(a.specificity, b.specificity))[0];
+          const sortedShields = shielding.sort((a, b) => specificity.compare(a.specificity, b.specificity) * -1);
+          const mostSpecificShield = sortedShields[0];
           const factor = mostSpecificShield ? Math.max(Math.ceil(parseInt(mostSpecificShield.specificity.join(''), 10) / 100), 1) : 1;
-          const innerPrefix = `[data-shadow-dom-root="${id}"]${range(factor, `:not(#${noop})`).join('')}`;
+          const innerPrefix = `[data-shadow-dom-root="${id}"]${range(factor + 1, `:not(#${noop})`).join('')}`;
 
           const animationResolutions = innerRules
             .filter(rule => rule.type === CSSRule.KEYFRAMES_RULE)
@@ -149,7 +150,6 @@ export function shadowDom(el) { // eslint-disable-line import/prefer-default-exp
                 toArray(outerDoc.querySelectorAll(selector)).filter(node => mount.contains(node)) :
                 [];
 
-              // TODO Extract important props from this
               const importantPropNames = shielding
                 .filter(s => some(s.affectedElements, a => some(matchedElements, m => a === m)))
                 .reduce((acc, {rule: {style}}) => {
@@ -487,6 +487,10 @@ function interrupt(el, {parent, prefixCount, noop, id, initialFor}) {
   // automated test runs, which does not happen for explicit values
   style.textContent = `
     [data-shadow-dom-root="${id}"]${escalator} {
+      ${props.map(prop => `${prop}: ${initialFor(prop)}`).join(';\n')}
+    }
+    [data-shadow-dom-root="${id}"]${escalator} :before,
+    [data-shadow-dom-root="${id}"]${escalator} :after {
       ${props.map(prop => `${prop}: ${initialFor(prop)}`).join(';\n')}
     }
     [data-shadow-dom-initial="${id}"]${escalator},

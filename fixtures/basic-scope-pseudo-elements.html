@@ -1,0 +1,25 @@
+<style>
+  #pseudo * {
+    color: green;
+  }
+  #pseudo .a::before,
+  #pseudo .a::after {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 25px;
+    background: currentColor;
+    border: 1px solid white;
+  }
+</style>
+<div id="pseudo">
+  <div class="a"></div>
+  <div class="shadow-dom">
+    <style>
+      * {
+        color: red;
+      }
+    </style>
+    <div class="a b"></div>
+  </div>
+</div>
