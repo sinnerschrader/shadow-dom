@@ -2,6 +2,23 @@ import selectorParser from 'postcss-selector-parser';
 import shortid from 'shortid';
 import specificity from 'specificity';
 
+const SELECTING_PSEUDOS = [
+  ':first',
+  ':first-child',
+  ':first-of-type',
+  ':last-child',
+  ':last-of-type',
+  ':not',
+  ':nth-child',
+  ':nth-last-child',
+  ':nth-last-of-type',
+  ':nth-of-type',
+  ':only-child',
+  ':only-of-type',
+  ':root',
+  ':scope'
+];
+
 export function shadowDom(el) { // eslint-disable-line import/prefer-default-export
   const parser = new DOMParser();
   const serializer = new XMLSerializer();
@@ -60,7 +77,12 @@ export function shadowDom(el) { // eslint-disable-line import/prefer-default-exp
 
           const shielding = flattenedOuterRules
             .map(rule => {
-              const affectedElements = toArray(outerDoc.querySelectorAll(rule.selectorText), 0).filter(el => mount.contains(el));
+              const selector = parseSelector(rule.selectorText)
+                .filter((node) => node.type !== 'pseudo' || includes(SELECTING_PSEUDOS, node.value))
+                .map(node => String(node)).join('');
+
+              const affectedElements = toArray(outerDoc.querySelectorAll(selector), 0).filter(el => mount.contains(el));
+
               return {
                 affectedElements,
                 rule
@@ -298,6 +320,7 @@ function scopeStyleRule(rule, {animationResolutions, fontResolutions, importantP
 
 function selectorInside(selector, {doc, el}) {
   const selectors = parseSelector(selector)
+    .reverse()
     .map((node, index, nodes) => nodes.slice(index).reverse().map(n => String(n)).join(''))
     .filter(selector => {
       const trimmed = selector.trim();
@@ -327,7 +350,7 @@ function parseSelector(selector) {
   };
 
   selectorParser(transform).processSync(selector);
-  return result.reverse();
+  return result;
 }
 
 function selectorOutside(selector, {doc, el}) {

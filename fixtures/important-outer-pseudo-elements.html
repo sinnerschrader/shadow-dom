@@ -1,0 +1,19 @@
+<div>
+    <p>
+    </p>
+    <div class="shadow-dom">
+      <style>
+        p::before {
+          content: 'Should be black';
+        }
+      </style>
+      <p>
+      </p>
+    </div>
+  </div>
+  <style>
+    p::before {
+      content: 'Should be red';
+      color: red!important;
+    }
+  </style>

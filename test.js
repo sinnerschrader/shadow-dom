@@ -154,6 +154,18 @@ it('resets !important rules', () => {
   cleanup();
 });
 
+it('resets !important rules in pseudo elements', () => {
+  const {scope, cleanup} = fixture('important-outer-pseudo-elements');
+
+  if (!HAS_SHADOWDOM) {
+    const inner = scope.shadowRoot.querySelector('p');
+    const innerColor = window.getComputedStyle(inner).getPropertyValue('color');
+    expect(innerColor).toBe('rgb(0, 0, 0)');
+  }
+
+  cleanup();
+});
+
 it('uses scoped style for !important props', () => {
   const {scope, cleanup} = fixture('important-inner');
 
