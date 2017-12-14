@@ -229,7 +229,9 @@ function getFlatSelector(rule) {
     case CSSRule.MEDIA_RULE:
       return toArray(rule.cssRules).map(getFlatSelector).join(',');
     case CSSRule.STYLE_RULE:
-      return rule.selectorText;
+      return parseSelector(rule.selectorText)
+        .filter(node => node.type !== 'pseudo' || includes(SELECTING_PSEUDOS, node.value))
+        .join('');
     case CSSRule.SUPPORTS_RULE: {
       return toArray(rule.cssRules).map(getFlatSelector).join(',');
     }

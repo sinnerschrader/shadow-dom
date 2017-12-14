@@ -222,6 +222,18 @@ it('protects from !important rules with escalating specificity', () => {
   cleanup();
 });
 
+it('protects from !important pseudo element rules with escalating specificity', () => {
+  const {scope, cleanup} = fixture('important-id-specificity-pseudo');
+
+  if (!HAS_SHADOWDOM) {
+    const a = scope.shadowRoot.querySelector('.a');
+    const aColor = window.getComputedStyle(a, '::before').getPropertyValue('color');
+    expect(aColor).toBe('rgb(0, 128, 0)');
+  }
+
+  cleanup();
+});
+
 it('protects from !important rules in media queries <= 500px', () => {
   viewport.set(499);
   const {scope, cleanup} = fixture('important-outer-mq');

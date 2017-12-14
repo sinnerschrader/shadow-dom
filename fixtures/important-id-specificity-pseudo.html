@@ -1,0 +1,24 @@
+<div id="a">
+  <div id="b">
+    <div id="c">
+      <div class="a"></div>
+      <div class="shadow-dom">
+        <style>
+          .a.a::before {
+            content: 'Should be green';
+            color: green;
+          }
+        </style>
+        <div>
+          <div class="a"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+  #a > #b#b #c .a.a::before {
+    content: 'Should be red';
+    color: red!important;
+  }
+</style>
