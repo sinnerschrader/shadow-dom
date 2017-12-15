@@ -1,0 +1,14 @@
+<div>
+  <input type="checkbox" class="b"/>
+  <span>Should be black/green</span>
+  <div class="shadow-dom">
+    <input type="checkbox" class="b"/>
+    <span>Should be black</span>
+  </div>
+</div>
+<style>
+  input:checked+span {
+    color: green!important;
+  }
+</style>
+</div>

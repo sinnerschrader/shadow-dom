@@ -83,6 +83,8 @@ it('enforces basic scoping for pseudo classes', () => {
       expect(innerColor).toBe('rgb(0, 128, 0)');
     }
   }
+
+  cleanup();
 });
 
 it('respects styling of inner scope', () => {
@@ -193,6 +195,28 @@ it('resets !important rules in pseudo elements', () => {
   }
 
   cleanup();
+});
+
+it('resets !important rules in pseudo classes', () => {
+  const {scope, cleanup} = fixture('important-outer-pseudo-classes');
+
+  if (!HAS_SHADOWDOM) {
+    const inner = scope.shadowRoot.querySelector('input');
+    const innerLabel = inner.nextElementSibling;
+
+    {
+      const innerColor = window.getComputedStyle(innerLabel).getPropertyValue('color');
+      expect(innerColor).toBe('rgb(0, 0, 0)');
+    }
+
+    {
+      inner.setAttribute('checked', true);
+      const innerColor = window.getComputedStyle(innerLabel).getPropertyValue('color');
+      expect(innerColor).toBe('rgb(0, 0, 0)');
+    }
+  }
+
+  // cleanup();
 });
 
 it('uses scoped style for !important props', () => {
