@@ -56,6 +56,35 @@ it('enforces basic scoping for pseudo elements', () => {
   cleanup();
 });
 
+it('enforces basic scoping for pseudo classes', () => {
+  const id = 'basic-scope-pseudo-classes';
+  const {scope, cleanup} = fixture(id);
+
+  if (!HAS_SHADOWDOM) {
+    const outer = document.querySelector(`[data-test-name="${id}"] input`);
+    const inner = scope.shadowRoot.querySelector('input');
+
+    const outerLabel = outer.nextElementSibling;
+    const innerLabel = inner.nextElementSibling;
+
+    {
+      const outerColor = window.getComputedStyle(outerLabel).getPropertyValue('color');
+      const innerColor = window.getComputedStyle(innerLabel).getPropertyValue('color');
+      expect(outerColor).toBe('rgb(255, 165, 0)');
+      expect(innerColor).toBe('rgb(0, 0, 255)');
+    }
+
+    {
+      outer.setAttribute('checked', true);
+      inner.setAttribute('checked', true);
+      const outerColor = window.getComputedStyle(outerLabel).getPropertyValue('color');
+      const innerColor = window.getComputedStyle(innerLabel).getPropertyValue('color');
+      expect(outerColor).toBe('rgb(255, 0, 0)');
+      expect(innerColor).toBe('rgb(0, 128, 0)');
+    }
+  }
+});
+
 it('respects styling of inner scope', () => {
   const {scope, cleanup} = fixture('inner-scope');
 
