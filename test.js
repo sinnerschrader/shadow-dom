@@ -87,6 +87,27 @@ it('enforces basic scoping for pseudo classes', () => {
   cleanup();
 });
 
+it('respects default styling of html elements', () => {
+  const {scope, cleanup} = fixture('basic-default-styles');
+
+  if (!HAS_SHADOWDOM) {
+    const a = scope.shadowRoot.querySelector('a');
+    const b = scope.shadowRoot.querySelector('b');
+    const address = scope.shadowRoot.querySelector('address');
+    const mark = scope.shadowRoot.querySelector('mark');
+
+    const aDecoration = window.getComputedStyle(a).getPropertyValue('text-decoration');
+    const bWeight = window.getComputedStyle(b).getPropertyValue('font-weight');
+    const addressFontStyle = window.getComputedStyle(address).getPropertyValue('font-style');
+    const markBackground = window.getComputedStyle(mark).getPropertyValue('background-color');
+
+    expect(aDecoration).toBe('underline');
+    expect(bWeight).toBe('700');
+    expect(addressFontStyle).toBe('italic');
+    expect(markBackground).toBe('rgb(255, 255, 0)');
+  }
+});
+
 it('respects styling of inner scope', () => {
   const {scope, cleanup} = fixture('inner-scope');
 
