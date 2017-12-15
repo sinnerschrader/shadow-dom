@@ -216,7 +216,7 @@ it('resets !important rules in pseudo classes', () => {
     }
   }
 
-  // cleanup();
+  cleanup();
 });
 
 it('uses scoped style for !important props', () => {
@@ -282,6 +282,25 @@ it('protects from !important pseudo element rules with escalating specificity', 
     const a = scope.shadowRoot.querySelector('.a');
     const aColor = window.getComputedStyle(a, '::before').getPropertyValue('color');
     expect(aColor).toBe('rgb(0, 128, 0)');
+  }
+
+  cleanup();
+});
+
+it('protects from !impotant pseudo classes with escalating specificity', () => {
+  const {scope, cleanup} = fixture('important-id-specificity-pseudo-classes');
+
+  if (!HAS_SHADOWDOM) {
+    const a = scope.shadowRoot.querySelector('input');
+    {
+      const aBorder = window.getComputedStyle(a).getPropertyValue('outline-color');
+      expect(aBorder).toBe('rgb(0, 128, 0)');
+    }
+    {
+      a.setAttribute('checked', true);
+      const aBorder = window.getComputedStyle(a).getPropertyValue('outline-color');
+      expect(aBorder).toBe('rgb(0, 128, 0)');
+    }
   }
 
   cleanup();

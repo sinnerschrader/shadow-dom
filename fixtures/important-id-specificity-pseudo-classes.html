@@ -1,0 +1,25 @@
+<div id="a">
+  <div id="b">
+    <div id="c">
+      <input type="checkbox" class="a"/>
+      <div class="shadow-dom">
+        <style>
+          .b {
+            outline-color: green;
+          }
+        </style>
+        <input type="checkbox" class="b"/>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+  .a.a {
+    width: 10px;
+    height: 10px;
+    outline: 10px solid black;
+  }
+  #a #b #c .a.a:checked {
+    outline: 10px solid red!important;
+  }
+</style>
