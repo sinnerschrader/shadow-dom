@@ -7,11 +7,11 @@ module.exports = config => {
     basePath: '',
     frameworks: ['jasmine', 'viewport'],
     files: [
-      {pattern: 'test.js', watched: false},
+      {pattern: 'src/**/*.test.js', watched: false},
       {pattern: './fixtures/*', included: false, served: true}
     ],
     preprocessors: {
-      '*.js': ['webpack']
+      'src/**/*.js': ['webpack']
     },
     reporters: ['dots'],
     colors: true,

@@ -1,7 +1,7 @@
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 module.exports = {
-  entry: ['./src.js'],
+  entry: ['./src/shadow-dom.js'],
   module: {
     loaders: [
       {
@@ -15,8 +15,9 @@ module.exports = {
     ]
   },
   output: {
-    filename: 'browser.js',
-    libraryTarget: 'commonjs2'
+    filename: 'shadow-dom.bundle.js',
+    libraryTarget: 'commonjs2',
+    path: __dirname + '/lib'
   },
   plugins: [
     new UglifyJsPlugin()

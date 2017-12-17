@@ -1,5 +1,5 @@
 /* global it, expect, viewport */
-import {shadowDom} from './src';
+import {shadowDom} from './shadow-dom';
 
 const HAS_SHADOWDOM = ('attachShadow' in document.createElement('div'));
 
@@ -426,7 +426,7 @@ it('protects default-hidden elements against revealing styles', () => {
 });
 
 function fixture(name) {
-  const html = require(`./fixtures/${name}.html`);
+  const html = require(`../fixtures/${name}.html`);
   return setup(html, {name});
 }
 

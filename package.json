@@ -2,16 +2,20 @@
   "name": "shadow-dom",
   "version": "1.0.0",
   "description": "A shadow-dom ponyfill",
-  "browser": "./browser.js",
+  "main": "./lib/shadow-dom.js",
+  "browser": "./lib/shadow-dom.bundle.js",
   "scripts": {
     "build": "npm run pack && npm run babel",
     "pack": "webpack",
-    "babel": "babel src.js > index.js",
+    "babel": "babel src -d lib",
     "lint": "xo",
     "test": "karma start karma.local.js",
     "test:remote": "karma start karma.remote.js"
   },
   "babel": {
+    "ignore": [
+      "src/**/*.test.js"
+    ],
     "plugins": [
       "transform-object-assign"
     ],

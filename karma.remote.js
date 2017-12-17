@@ -9,13 +9,13 @@ module.exports = config => {
     basePath: '',
     frameworks: ['jasmine', 'viewport'],
     files: [
-      {pattern: 'test.js', watched: false},
+      {pattern: 'src/**/*.test.js', watched: false},
       {pattern: './fixtures/*', included: false, served: true}
     ],
     exclude: [
     ],
     preprocessors: {
-      '*.js': ['webpack']
+      'src/**/*.js': ['webpack']
     },
     reporters: ['dots', 'BrowserStack'],
     port: 9876,
