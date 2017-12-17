@@ -7,3 +7,10 @@ it('throws for empty input', () => {
 it('works for empty string', () => {
   expect(() => parse('')).not.toThrowError();
 });
+
+it('creates doc for empty string', () => {
+  const actual = parse('');
+  expect(actual).toContain({tagName: 'HTML', path: [], rules: []});
+  expect(actual).toContain({tagName: 'HEAD', path: [0], rules: []});
+  expect(actual).toContain({tagName: 'BODY', path: [1], rules: []});
+});
