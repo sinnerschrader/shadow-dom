@@ -22,3 +22,24 @@ it('creates doc with expected elements', () => {
   expect(actual).toContain(jasmine.objectContaining({tagName: 'DIV', path: [1, 0]}));
   expect(actual).toContain(jasmine.objectContaining({tagName: 'SPAN', path: [1, 1]}));
 });
+
+it('matches basic rules as expected', () => {
+  const html = fixture('tree-basic-rules');
+  const actual = parse(html);
+
+  expect(actual).toContain(jasmine.objectContaining({
+    tagName: 'DIV',
+    path: [1, 0],
+    rules: jasmine.arrayContaining([
+      jasmine.objectContaining({selectorText: 'div'})
+    ])
+  }));
+
+  expect(actual).toContain(jasmine.objectContaining({
+    tagName: 'SPAN',
+    path: [1, 1],
+    rules: jasmine.arrayContaining([
+      jasmine.objectContaining({selectorText: 'span'})
+    ])
+  }));
+});

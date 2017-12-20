@@ -6,26 +6,24 @@ export function parse(source) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(source, 'text/html');
 
-  const rules = NodeList.reduce(doc.getElementsByTagName('style'), (acc, style) => {
-    Array.prototype.push.apply(style, style.sheet.cssRules);
-    return acc;
-  }, []);
+  const rules = NodeList
+    .reduce(doc.getElementsByTagName('style'), (acc, style) => pushTo(acc, toArray(style.sheet.cssRules)), []);
 
   return NodeList.map(doc.querySelectorAll('*'), (node) => {
     return {
       tagName: node.tagName,
       path: getPathByElement(node, doc.documentElement),
-      rules: []
+      rules: rules.filter(rule => node.matches(rule.selectorText))
     };
   });
 }
 
 const NodeList = {
-  reduce(...args) {
-    return Array.prototype.reduce.call(...args);
+  reduce(list, ...args) {
+    return Array.prototype.reduce.call(list, ...args);
   },
-  map(...args) {
-    return Array.prototype.map.call(...args);
+  map(list, ...args) {
+    return Array.prototype.map.call(list, ...args);
   }
 }
 
@@ -50,4 +48,13 @@ function getElementIndex(element) {
   }
 
   return index;
+}
+
+function pushTo(to, from) {
+  Array.prototype.push.apply(to, from);
+  return to;
+}
+
+function toArray(input) {
+  return Array.prototype.slice.call(input, 0);
 }
