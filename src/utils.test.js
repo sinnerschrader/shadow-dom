@@ -1,8 +1,11 @@
 import {shadowDom} from './shadow-dom';
 
 export function fixture(name) {
-  const html = require(`../fixtures/${name}.html`);
-  return setup(html, {name});
+  return require(`../fixtures/${name}.html`);
+}
+
+export function bootstrap(name) {
+  return setup(fixture(name), {name});
 }
 
 export function getFontList(element) {

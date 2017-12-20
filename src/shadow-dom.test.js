@@ -1,6 +1,6 @@
 /* global it, expect, viewport */
 import {shadowDom} from './shadow-dom';
-import {fixture, getFontList, getKeyFrames, setup} from './utils.test.js';
+import {bootstrap, getFontList, getKeyFrames, setup} from './utils.test.js';
 
 const HAS_SHADOWDOM = ('attachShadow' in document.createElement('div'));
 
@@ -31,7 +31,7 @@ it('is plain element if unsupported', () => {
 });
 
 it('enforces basic scoping', () => {
-  const {scope, cleanup} = fixture('basic-scope');
+  const {scope, cleanup} = bootstrap('basic-scope');
 
   if (!HAS_SHADOWDOM) {
     const b = scope.shadowRoot.querySelector('.b');
@@ -43,7 +43,7 @@ it('enforces basic scoping', () => {
 });
 
 it('enforces basic scoping for pseudo elements', () => {
-  const {scope, cleanup} = fixture('basic-scope-pseudo-elements');
+  const {scope, cleanup} = bootstrap('basic-scope-pseudo-elements');
 
   if (!HAS_SHADOWDOM) {
     const a = scope.shadowRoot.querySelector('.a');
@@ -59,7 +59,7 @@ it('enforces basic scoping for pseudo elements', () => {
 
 it('enforces basic scoping for pseudo classes', () => {
   const id = 'basic-scope-pseudo-classes';
-  const {scope, cleanup} = fixture(id);
+  const {scope, cleanup} = bootstrap(id);
 
   if (!HAS_SHADOWDOM) {
     const outer = document.querySelector(`[data-test-name="${id}"] input`);
@@ -89,7 +89,7 @@ it('enforces basic scoping for pseudo classes', () => {
 });
 
 it('respects default styling of html elements', () => {
-  const {scope, cleanup} = fixture('basic-default-styles');
+  const {scope, cleanup} = bootstrap('basic-default-styles');
 
   if (!HAS_SHADOWDOM) {
     const a = scope.shadowRoot.querySelector('a');
@@ -110,7 +110,7 @@ it('respects default styling of html elements', () => {
 });
 
 it('respects styling of inner scope', () => {
-  const {scope, cleanup} = fixture('inner-scope');
+  const {scope, cleanup} = bootstrap('inner-scope');
 
   if (!HAS_SHADOWDOM) {
     const b = scope.shadowRoot.querySelector('.b');
@@ -122,7 +122,7 @@ it('respects styling of inner scope', () => {
 });
 
 it('respects styling of inner scope pseudo elements', () => {
-  const {scope, cleanup} = fixture('inner-scope-pseudo-elements');
+  const {scope, cleanup} = bootstrap('inner-scope-pseudo-elements');
 
   if (!HAS_SHADOWDOM) {
     const b = scope.shadowRoot.querySelector('.b');
@@ -134,7 +134,7 @@ it('respects styling of inner scope pseudo elements', () => {
 });
 
 it('scopes against high specificity styling', () => {
-  const {scope, cleanup} = fixture('high-specificity-scope');
+  const {scope, cleanup} = bootstrap('high-specificity-scope');
 
   if (!HAS_SHADOWDOM) {
     const a = scope.shadowRoot.querySelector('.a');
@@ -146,7 +146,7 @@ it('scopes against high specificity styling', () => {
 });
 
 it('prevents bleeding', () => {
-  const {cleanup} = fixture('bleeding-scope');
+  const {cleanup} = bootstrap('bleeding-scope');
 
   if (!HAS_SHADOWDOM) {
     const b = document.querySelector('[data-test-name="bleeding-scope"] .b');
@@ -158,7 +158,7 @@ it('prevents bleeding', () => {
 });
 
 it('prevents bleeding via basic media queries', () => {
-  const {scope, cleanup} = fixture('bleeding-scope-mq-basic');
+  const {scope, cleanup} = bootstrap('bleeding-scope-mq-basic');
 
   if (!HAS_SHADOWDOM) {
     const inner = scope.shadowRoot.querySelector('.b');
@@ -170,7 +170,7 @@ it('prevents bleeding via basic media queries', () => {
 });
 
 it('prevents bleeding via complex media queries', () => {
-  const {scope, cleanup} = fixture('bleeding-scope-mq-complex');
+  const {scope, cleanup} = bootstrap('bleeding-scope-mq-complex');
 
   if (!HAS_SHADOWDOM) {
     const inner = scope.shadowRoot.querySelector('.b');
@@ -182,7 +182,7 @@ it('prevents bleeding via complex media queries', () => {
 });
 
 it('prevents bleeding via supports queries', () => {
-  const {scope, cleanup} = fixture('bleeding-scope-supports-basic');
+  const {scope, cleanup} = bootstrap('bleeding-scope-supports-basic');
 
   if (!HAS_SHADOWDOM) {
     const inner = scope.shadowRoot.querySelector('.b');
@@ -196,7 +196,7 @@ it('prevents bleeding via supports queries', () => {
 });
 
 it('resets !important rules', () => {
-  const {scope, cleanup} = fixture('important-outer');
+  const {scope, cleanup} = bootstrap('important-outer');
 
   if (!HAS_SHADOWDOM) {
     const inner = scope.shadowRoot.querySelector('p');
@@ -208,7 +208,7 @@ it('resets !important rules', () => {
 });
 
 it('resets !important rules in pseudo elements', () => {
-  const {scope, cleanup} = fixture('important-outer-pseudo-elements');
+  const {scope, cleanup} = bootstrap('important-outer-pseudo-elements');
 
   if (!HAS_SHADOWDOM) {
     const inner = scope.shadowRoot.querySelector('p');
@@ -220,7 +220,7 @@ it('resets !important rules in pseudo elements', () => {
 });
 
 it('resets !important rules in pseudo classes', () => {
-  const {scope, cleanup} = fixture('important-outer-pseudo-classes');
+  const {scope, cleanup} = bootstrap('important-outer-pseudo-classes');
 
   if (!HAS_SHADOWDOM) {
     const inner = scope.shadowRoot.querySelector('input');
@@ -242,7 +242,7 @@ it('resets !important rules in pseudo classes', () => {
 });
 
 it('uses scoped style for !important props', () => {
-  const {scope, cleanup} = fixture('important-inner');
+  const {scope, cleanup} = bootstrap('important-inner');
 
   if (!HAS_SHADOWDOM) {
     const inner = scope.shadowRoot.querySelector('p');
@@ -254,7 +254,7 @@ it('uses scoped style for !important props', () => {
 });
 
 it('preserves specifity relations as found', () => {
-  const {scope, cleanup} = fixture('important-inner-tree');
+  const {scope, cleanup} = bootstrap('important-inner-tree');
 
   if (!HAS_SHADOWDOM) {
     const a = scope.shadowRoot.querySelector('.a');
@@ -274,7 +274,7 @@ it('preserves specifity relations as found', () => {
 });
 
 it('protects from !important rules with higher specificity', () => {
-  const {scope, cleanup} = fixture('important-high-specificity');
+  const {scope, cleanup} = bootstrap('important-high-specificity');
 
   if (!HAS_SHADOWDOM) {
     const a = scope.shadowRoot.querySelector('.a');
@@ -286,7 +286,7 @@ it('protects from !important rules with higher specificity', () => {
 });
 
 it('protects from !important rules with escalating specificity', () => {
-  const {scope, cleanup} = fixture('important-id-specificity');
+  const {scope, cleanup} = bootstrap('important-id-specificity');
 
   if (!HAS_SHADOWDOM) {
     const a = scope.shadowRoot.querySelector('.a');
@@ -298,7 +298,7 @@ it('protects from !important rules with escalating specificity', () => {
 });
 
 it('protects from !important pseudo element rules with escalating specificity', () => {
-  const {scope, cleanup} = fixture('important-id-specificity-pseudo');
+  const {scope, cleanup} = bootstrap('important-id-specificity-pseudo');
 
   if (!HAS_SHADOWDOM) {
     const a = scope.shadowRoot.querySelector('.a');
@@ -310,7 +310,7 @@ it('protects from !important pseudo element rules with escalating specificity', 
 });
 
 it('protects from !impotant pseudo classes with escalating specificity', () => {
-  const {scope, cleanup} = fixture('important-id-specificity-pseudo-classes');
+  const {scope, cleanup} = bootstrap('important-id-specificity-pseudo-classes');
 
   if (!HAS_SHADOWDOM) {
     const a = scope.shadowRoot.querySelector('input');
@@ -330,7 +330,7 @@ it('protects from !impotant pseudo classes with escalating specificity', () => {
 
 it('protects from !important rules in media queries <= 500px', () => {
   viewport.set(499);
-  const {scope, cleanup} = fixture('important-outer-mq');
+  const {scope, cleanup} = bootstrap('important-outer-mq');
 
   if (!HAS_SHADOWDOM) {
     const inner = scope.shadowRoot.querySelector('.b');
@@ -344,7 +344,7 @@ it('protects from !important rules in media queries <= 500px', () => {
 
 it('protects from !important rules in media queries > 500px', () => {
   viewport.set(501);
-  const {scope, cleanup} = fixture('important-outer-mq');
+  const {scope, cleanup} = bootstrap('important-outer-mq');
 
   if (!HAS_SHADOWDOM) {
     const inner = scope.shadowRoot.querySelector('.b');
@@ -357,7 +357,7 @@ it('protects from !important rules in media queries > 500px', () => {
 });
 
 it('protects animations from name collisions', () => {
-  const {scope, cleanup} = fixture('globals-animation');
+  const {scope, cleanup} = bootstrap('globals-animation');
 
   if (!HAS_SHADOWDOM) {
     const ctx = document.querySelector('[data-test-name="globals-animation"]');
@@ -380,7 +380,7 @@ it('protects animations from name collisions', () => {
 });
 
 it('protects fonts from name collisions', () => {
-  const {scope, cleanup} = fixture('globals-fontface');
+  const {scope, cleanup} = bootstrap('globals-fontface');
 
   if (!HAS_SHADOWDOM) {
     const outer = document.querySelector('.a');
@@ -397,12 +397,12 @@ it('protects fonts from name collisions', () => {
 });
 
 it('handles invalid css selectors gracefully', () => {
-  const {cleanup} = fixture('invalid-selectors'); // does not throw
+  const {cleanup} = bootstrap('invalid-selectors'); // does not throw
   cleanup();
 });
 
 it('encapsulates against selectors matching mount point', () => {
-  const {scope, cleanup} = fixture('mount-selector');
+  const {scope, cleanup} = bootstrap('mount-selector');
 
   if (!HAS_SHADOWDOM) {
     const outer = document.querySelector('[data-test-name="mount-selector"] .a');
@@ -415,7 +415,7 @@ it('encapsulates against selectors matching mount point', () => {
 });
 
 it('protects default-hidden elements against revealing styles', () => {
-  const {scope, cleanup} = fixture('hidden-elements');
+  const {scope, cleanup} = bootstrap('hidden-elements');
 
   if (!HAS_SHADOWDOM) {
     const inner = Array.prototype.slice.call(document.querySelectorAll('[data-testname="hidden-elements"] .shadow-dom style, [data-testname="hidden-elements"] .shadow-dom script'), 0);
