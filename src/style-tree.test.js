@@ -43,3 +43,24 @@ it('matches basic rules as expected', () => {
     ])
   }));
 });
+
+it('matches media query rules as expected', () => {
+  const html = fixture('tree-basic-media');
+  const actual = parse(html);
+
+  expect(actual).toContain(jasmine.objectContaining({
+    tagName: 'DIV',
+    path: [1, 0],
+    rules: jasmine.arrayContaining([
+      jasmine.objectContaining({selectorText: '.a'})
+    ])
+  }));
+
+  expect(actual).toContain(jasmine.objectContaining({
+    tagName: 'SPAN',
+    path: [1, 1],
+    rules: jasmine.arrayContaining([
+      jasmine.objectContaining({selectorText: '.b'})
+    ])
+  }));
+});

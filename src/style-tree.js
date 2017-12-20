@@ -1,19 +1,22 @@
-export function parse(source) {
-  if (typeof source !== 'string') {
+const DEFAULT_DOC = '<html><head></head><body></body></html>';
+
+export function parse(rawSource) {
+  if (typeof rawSource !== 'string') {
     throw new TypeError(`style-tree.parse: missing required parameter source`);
   }
 
+  const source = rawSource === '' ? DEFAULT_DOC : rawSource;
   const parser = new DOMParser();
   const doc = parser.parseFromString(source, 'text/html');
 
   const rules = NodeList
-    .reduce(doc.getElementsByTagName('style'), (acc, style) => pushTo(acc, toArray(style.sheet.cssRules)), []);
+    .reduce(doc.getElementsByTagName('style'), (acc, style) => pushTo(acc, flattenRules(style.sheet.cssRules)), []);
 
   return NodeList.map(doc.querySelectorAll('*'), (node) => {
     return {
       tagName: node.tagName,
       path: getPathByElement(node, doc.documentElement),
-      rules: rules.filter(rule => node.matches(rule.selectorText))
+      rules: rules.filter(rule => elementMatches(node, rule.selectorText))
     };
   });
 }
@@ -25,6 +28,35 @@ const NodeList = {
   map(list, ...args) {
     return Array.prototype.map.call(list, ...args);
   }
+}
+
+function elementMatches(node, selector) {
+  if (HTMLElement.prototype.matches) {
+    return node.matches(selector);
+  }
+
+  if (HTMLElement.prototype.msMatchesSelector) {
+    return node.msMatchesSelector(selector);
+  }
+
+  throw new TypeError('elementMatches: node.matches and node.msMatchesSelector are not supported');
+}
+
+function flattenRules(rules) {
+  return toArray(rules).reduce((acc, r) => {
+    switch (r.type) {
+      case CSSRule.STYLE_RULE:
+        acc.push(r);
+        break;
+      case CSSRule.MEDIA_RULE:
+      case CSSRule.SUPPORTS_RULE:
+        pushTo(acc, flattenRules(toArray(r.cssRules, 0)));
+        break;
+      default:
+        return acc;
+    }
+    return acc;
+  }, []);
 }
 
 function getPathByElement(element, base) {
@@ -56,5 +88,7 @@ function pushTo(to, from) {
 }
 
 function toArray(input) {
-  return Array.prototype.slice.call(input, 0);
+  return Array.isArray(input)
+    ? input
+    : Array.prototype.slice.call(input, 0);
 }
