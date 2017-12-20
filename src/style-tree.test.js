@@ -10,7 +10,7 @@ it('works for empty string', () => {
 
 it('creates doc for empty string', () => {
   const actual = parse('');
-  expect(actual).toContain({tagName: 'HTML', path: [], rules: []});
-  expect(actual).toContain({tagName: 'HEAD', path: [0], rules: []});
-  expect(actual).toContain({tagName: 'BODY', path: [1], rules: []});
+  expect(actual).toContain(jasmine.objectContaining({tagName: 'HTML', path: []}));
+  expect(actual).toContain(jasmine.objectContaining({tagName: 'HEAD', path: [0]}));
+  expect(actual).toContain(jasmine.objectContaining({tagName: 'BODY', path: [1]}));
 });
