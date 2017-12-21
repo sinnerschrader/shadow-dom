@@ -1,4 +1,5 @@
 import {pushTo} from './push-to';
+import {toArray} from './to-array';
 
 const DEFAULT_DOC = '<html><head></head><body></body></html>';
 
@@ -82,10 +83,4 @@ function getElementIndex(element) {
   }
 
   return index;
-}
-
-function toArray(input) {
-  return Array.isArray(input)
-    ? input
-    : Array.prototype.slice.call(input, 0);
 }

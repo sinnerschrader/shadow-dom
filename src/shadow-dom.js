@@ -2,6 +2,7 @@ import selectorParser from 'postcss-selector-parser';
 import shortid from 'shortid';
 import specificity from 'specificity';
 import {pushTo} from './push-to';
+import {toArray} from './to-array';
 
 const SELECTING_PSEUDOS = [
   ':first',
@@ -647,8 +648,4 @@ function supports(feature) {
     default:
       throw new TypeError(`supports: unknown feature "${feature}".`);
   }
-}
-
-function toArray(input) {
-  return Array.prototype.slice.call(input, 0);
 }
