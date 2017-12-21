@@ -9,8 +9,7 @@
     "pack": "webpack",
     "babel": "babel src -d lib",
     "lint": "xo",
-    "test": "karma start karma.local.js",
-    "test:remote": "karma start karma.remote.js"
+    "test": "karma start karma.remote.js"
   },
   "babel": {
     "ignore": [
