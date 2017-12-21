@@ -26,6 +26,20 @@ npx yarn test
 * `npm test`: Headless Chrome, Headless Firefox
 * `BROWSER_STACK_USERNAME=<username> BROWSER_STACK_ACCESS_KEY=<password> npm test`
 
+Testing may optionally be limited to browsers via cli flags
+
+* `npm test -- --firefox` Test only in Firefox
+* `npm test -- --chrome` Test only in Chrome
+
+```sh
+# All flags
+--chrome
+--edge
+--firefox
+--ie
+--safari
+```
+
 ## License
 
 `shadow-dom` is published under the MIT license
