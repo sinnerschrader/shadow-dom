@@ -1,6 +1,7 @@
 import selectorParser from 'postcss-selector-parser';
 import shortid from 'shortid';
 import specificity from 'specificity';
+import {flattenRules} from './flatten-rules';
 import {pushTo} from './push-to';
 import {toArray} from './to-array';
 
@@ -61,6 +62,7 @@ export function shadowDom(el) { // eslint-disable-line import/prefer-default-exp
           const innerRules = toArray(doc.querySelectorAll('style'), 0).reduce((rs, s) => pushTo(rs, s.sheet.cssRules), []);
           const prefix = `[data-shadow-dom-root="${id}"]:not(#${noop})`;
           const flattenedOuterRules = flattenRules(outerRules)
+            .filter(r => r.type === CSSRule.STYLE_RULE)
             .reduce((acc, r) => {
               r.selectorText.split(',')
                 .map(s => s.trim())
@@ -130,7 +132,6 @@ export function shadowDom(el) { // eslint-disable-line import/prefer-default-exp
           const innerPrefix = `[data-shadow-dom-root="${id}"]${range(factor + 1, `:not(#${noop})`).join('')}`;
 
           const animationResolutions = innerRules
-            .filter(rule => rule.type === CSSRule.KEYFRAMES_RULE)
             .filter(rule => some(outerAnimations, r => r.name === rule.name))
             .map(rule => ({
               nameBefore: rule.name,
@@ -384,23 +385,6 @@ function find(arr, predicate) {
     }
   }
   return undefined;
-}
-
-function flattenRules(rules) {
-  return rules.reduce((acc, r) => {
-    switch (r.type) {
-      case CSSRule.STYLE_RULE:
-        acc.push(r);
-        break;
-      case CSSRule.MEDIA_RULE:
-      case CSSRule.SUPPORTS_RULE:
-        pushTo(acc, flattenRules(toArray(r.cssRules, 0)));
-        break;
-      default:
-        return acc;
-    }
-    return acc;
-  }, []);
 }
 
 function getAll() {

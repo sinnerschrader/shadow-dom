@@ -1,5 +1,5 @@
+import {flattenRules} from './flatten-rules';
 import {pushTo} from './push-to';
-import {toArray} from './to-array';
 
 const DEFAULT_DOC = '<html><head></head><body></body></html>';
 
@@ -43,23 +43,6 @@ function elementMatches(node, selector) {
   }
 
   throw new TypeError('elementMatches: node.matches and node.msMatchesSelector are not supported');
-}
-
-function flattenRules(rules) {
-  return toArray(rules).reduce((acc, r) => {
-    switch (r.type) {
-      case CSSRule.STYLE_RULE:
-        acc.push(r);
-        break;
-      case CSSRule.MEDIA_RULE:
-      case CSSRule.SUPPORTS_RULE:
-        pushTo(acc, flattenRules(toArray(r.cssRules, 0)));
-        break;
-      default:
-        return acc;
-    }
-    return acc;
-  }, []);
 }
 
 function getPathByElement(element, base) {

@@ -107,6 +107,8 @@ it('respects default styling of html elements', () => {
     expect(addressFontStyle).toBe('italic');
     expect(markBackground).toBe('rgb(255, 255, 0)');
   }
+
+  cleanup();
 });
 
 it('respects styling of inner scope', () => {
@@ -294,7 +296,7 @@ it('protects from !important rules with escalating specificity', () => {
     expect(color).toBe('rgb(0, 0, 0)');
   }
 
-  cleanup();
+  // cleanup();
 });
 
 it('protects from !important pseudo element rules with escalating specificity', () => {
