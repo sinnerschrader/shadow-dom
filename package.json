@@ -35,11 +35,20 @@
   },
   "xo": {
     "space": true,
-    "env": ["browser", "jasmine"],
+    "env": [
+      "browser",
+      "jasmine"
+    ],
     "rules": {
-      "camelcase": [0],
-      "import/no-unassigned-import": [0],
-      "unicorn/no-process-exit": [0]
+      "camelcase": [
+        0
+      ],
+      "import/no-unassigned-import": [
+        0
+      ],
+      "unicorn/no-process-exit": [
+        0
+      ]
     }
   },
   "repository": {
@@ -75,6 +84,7 @@
     "karma-safari-launcher": "^1.0.0",
     "karma-viewport": "^0.4.2",
     "karma-webpack": "^2.0.5",
+    "meow": "^4.0.0",
     "puppeteer": "^0.13.0",
     "raw-loader": "^0.5.1",
     "uglifyjs-webpack-plugin": "^1.1.2",

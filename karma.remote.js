@@ -1,9 +1,28 @@
+const meow = require('meow');
+const cli = meow();
+
+const DEFAULT_BROWSERS = [
+  'bs_chrome',
+  'bs_firefox',
+  'bs_safari',
+  'bs_ie',
+  'bs_edge'
+];
+
 module.exports = config => {
   if (!process.env.BROWSER_STACK_USERNAME || !process.env.BROWSER_STACK_ACCESS_KEY) {
     console.log('Falling back to local tests as BROWSER_STACK_USERNAME and BROWSER_STACK_ACCESS_KEY are not set.');
-    require('./karma.local.js');
-    process.exit(0);
+    return require('./karma.local.js')(config);
   }
+
+  const indicated = [
+    cli.flags.ie && 'bs_ie',
+    cli.flags.edge && 'bs_edge',
+    cli.flags.safari && 'bs_safari',
+    cli.flags.chrome && 'bs_chrome'
+  ].filter(Boolean);
+
+  const browsers = indicated.length === 0 ? DEFAULT_BROWSERS : indicated;
 
   config.set({
     basePath: '',
@@ -81,12 +100,6 @@ module.exports = config => {
         os_version: '10'
       }
     },
-    browsers: [
-      'bs_chrome',
-      'bs_firefox',
-      'bs_safari',
-      'bs_ie',
-      'bs_edge'
-    ]
+    browsers: browsers
   });
 };

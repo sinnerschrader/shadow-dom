@@ -1,8 +1,15 @@
 const os = require('os');
+const meow = require('meow');
+const cli = meow();
 
 process.env.CHROME_BIN = require('puppeteer').executablePath();
 
 module.exports = config => {
+  const indicated = 'chrome' in cli.flags ||
+    'safari' in cli.flags ||
+    'firefox' in cli.flags ||
+    'ie' in cli.flags;
+
   config.set({
     basePath: '',
     frameworks: ['jasmine', 'viewport'],
@@ -45,37 +52,37 @@ module.exports = config => {
       {
         name: 'ChromeHeadless',
         test() {
-          return process.env.HEADLESS !== 'false';
+          return process.env.HEADLESS !== 'false' && (!indicated || cli.flags.chrome);
         }
       },
       {
         name: 'Chrome',
         test() {
-          return process.env.HEADLESS === 'false';
+          return process.env.HEADLESS === 'false' && (!indicated || cli.flags.chrome);
         }
       },
       {
         name: 'FirefoxHeadless',
         test() {
-          return process.env.HEADLESS !== 'false';
+          return process.env.HEADLESS !== 'false' && (!indicated || cli.flags.firefox);
         }
       },
       {
         name: 'Firefox',
         test() {
-          return process.env.HEADLESS === 'false';
+          return process.env.HEADLESS === 'false' && (!indicated || cli.flags.firefox);
         }
       },
       {
         name: 'Safari',
         test() {
-          return os.platform() === 'darwin' && process.env.HEADLESS === 'false';
+          return os.platform() === 'darwin' && process.env.HEADLESS === 'false' && (!indicated || cli.flags.safari);
         }
       },
       {
         name: 'IE',
         test() {
-          return os.platform() === 'win32' && process.env.HEADLESS === 'false';
+          return os.platform() === 'win32' && process.env.HEADLESS === 'false' && (!indicated || cli.flags.ie);
         }
       }
     ]
