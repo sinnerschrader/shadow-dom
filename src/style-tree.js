@@ -1,3 +1,5 @@
+import {pushTo} from './push-to';
+
 const DEFAULT_DOC = '<html><head></head><body></body></html>';
 
 export function parse(rawSource) {
@@ -80,11 +82,6 @@ function getElementIndex(element) {
   }
 
   return index;
-}
-
-function pushTo(to, from) {
-  Array.prototype.push.apply(to, from);
-  return to;
 }
 
 function toArray(input) {
