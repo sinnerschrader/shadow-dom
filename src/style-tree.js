@@ -1,5 +1,6 @@
 import {elementMatches} from './element-matches';
 import {flattenRules} from './flatten-rules';
+import {getPathByElement} from './get-path-by-element';
 import {pushTo} from './push-to';
 
 const DEFAULT_DOC = '<html><head></head><body></body></html>';
@@ -32,27 +33,4 @@ const NodeList = {
   map(list, ...args) {
     return Array.prototype.map.call(list, ...args);
   }
-}
-
-function getPathByElement(element, base) {
-  const selector = [];
-  let current = element;
-
-  while (current.parentNode && base ? current !== base : current.tagName.toLowerCase() !== 'body') {
-    const count = getElementIndex(current);
-    selector.unshift(count);
-    current = current.parentNode;
-  }
-
-  return selector;
-}
-
-function getElementIndex(element) {
-  let index = 0;
-
-  while ((element = element.previousElementSibling)) {
-    index++;
-  }
-
-  return index;
 }

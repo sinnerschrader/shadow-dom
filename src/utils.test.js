@@ -1,5 +1,10 @@
 import {shadowDom} from './shadow-dom';
 
+export function dom(html) {
+  const parser = new DOMParser();
+  return parser.parseFromString(html, 'text/html');
+}
+
 export function fixture(name) {
   return require(`../fixtures/${name}.html`);
 }
