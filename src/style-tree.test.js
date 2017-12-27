@@ -104,3 +104,10 @@ it('sorts pseudo element rules descending by specificity', () => {
   expect(after).toEqual(['.b.b.b + .a::before', 'div::before']);
   expect(before).toEqual(['.b.b::after', 'span::after', 'span::after']);
 });
+
+it('honors source order', () => {
+  const list = parse(fixture('tree-source-order'));
+  const span = list.find(i => i.tagName === 'SPAN');
+  const colors = span.rules.map(r => r.style.getPropertyValue('color'));
+  expect(colors).toEqual(['green', 'red']);
+});
