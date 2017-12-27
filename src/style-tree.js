@@ -1,3 +1,4 @@
+import {elementMatches} from './element-matches';
 import {flattenRules} from './flatten-rules';
 import {pushTo} from './push-to';
 
@@ -31,18 +32,6 @@ const NodeList = {
   map(list, ...args) {
     return Array.prototype.map.call(list, ...args);
   }
-}
-
-function elementMatches(node, selector) {
-  if (HTMLElement.prototype.matches) {
-    return node.matches(selector);
-  }
-
-  if (HTMLElement.prototype.msMatchesSelector) {
-    return node.msMatchesSelector(selector);
-  }
-
-  throw new TypeError('elementMatches: node.matches and node.msMatchesSelector are not supported');
 }
 
 function getPathByElement(element, base) {
