@@ -1,3 +1,5 @@
+import specificity from 'specificity';
+
 import {elementMatches} from './element-matches';
 import {flattenRules} from './flatten-rules';
 import {getPathByElement} from './get-path-by-element';
@@ -16,7 +18,8 @@ export function parse(rawSource) {
   const doc = parser.parseFromString(source, 'text/html');
 
   const rules = NodeList
-    .reduce(doc.getElementsByTagName('style'), (acc, style) => pushTo(acc, flattenRules(style.sheet.cssRules)), []);
+    .reduce(doc.getElementsByTagName('style'), (acc, style) => pushTo(acc, flattenRules(style.sheet.cssRules)), [])
+    .sort((a, b) => specificity.compare(a.selectorText, b.selectorText) * -1);
 
   return NodeList.map(doc.querySelectorAll('*'), (node) => {
     return {

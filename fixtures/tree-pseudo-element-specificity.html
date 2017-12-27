@@ -1,0 +1,27 @@
+<style>
+    .a {
+      color: green;
+    }
+    div {
+      color: red;
+    }
+    div::before {
+      content: 'before';
+      color: black;
+    }
+    span::after {
+      color: green;
+    }
+    span::after {
+      content: 'after';
+      color: black;
+    }
+    .b.b::after {
+      color: grey;
+    }
+    .b.b.b + .a::before {
+      color: blue;
+    }
+  </style>
+  <span class="b"></span>
+  <div class="a"></div>
