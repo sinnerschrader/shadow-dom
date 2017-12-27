@@ -64,3 +64,24 @@ it('matches media query rules as expected', () => {
     ])
   }));
 });
+
+it('attaches pseudo elements to hosts', () => {
+  const html = fixture('tree-pseudo-elements');
+  const actual = parse(html);
+
+  expect(actual).toContain(jasmine.objectContaining({
+    tagName: 'DIV',
+    path: [1, 0],
+    before: jasmine.arrayContaining([
+      jasmine.objectContaining({selectorText: 'div::before'})
+    ])
+  }));
+
+  expect(actual).toContain(jasmine.objectContaining({
+    tagName: 'SPAN',
+    path: [1, 1],
+    after: jasmine.arrayContaining([
+      jasmine.objectContaining({selectorText: 'span::after'})
+    ])
+  }));
+});

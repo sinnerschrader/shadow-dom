@@ -22,7 +22,17 @@ export function parse(rawSource) {
     return {
       tagName: node.tagName,
       path: getPathByElement(node, doc.documentElement),
-      rules: rules.filter(rule => elementMatches(node, rule.selectorText))
+      rules: rules.filter(rule => elementMatches(node, rule.selectorText)),
+      after: rules.filter(rule => elementHasPseudo(node, rule.selectorText, {pseudo: 'after'})),
+      before: rules.filter(rule => elementHasPseudo(node, rule.selectorText, {pseudo: 'before'}))
     };
   });
+}
+
+function elementHasPseudo(node, selectorText, {pseudo}) {
+  const [selector, pseudoElement] = selectorText.split('::');
+  if (pseudoElement !== pseudo) {
+    return false;
+  }
+  return elementMatches(node, selector);
 }
