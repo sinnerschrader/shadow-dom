@@ -1,6 +1,7 @@
 import {elementMatches} from './element-matches';
 import {flattenRules} from './flatten-rules';
 import {getPathByElement} from './get-path-by-element';
+import * as NodeList from './node-list';
 import {pushTo} from './push-to';
 
 const DEFAULT_DOC = '<html><head></head><body></body></html>';
@@ -24,13 +25,4 @@ export function parse(rawSource) {
       rules: rules.filter(rule => elementMatches(node, rule.selectorText))
     };
   });
-}
-
-const NodeList = {
-  reduce(list, ...args) {
-    return Array.prototype.reduce.call(list, ...args);
-  },
-  map(list, ...args) {
-    return Array.prototype.map.call(list, ...args);
-  }
 }
