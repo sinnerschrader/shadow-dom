@@ -1,5 +1,5 @@
 import {toArray} from './to-array';
-import {fixture} from './utils.test';
+import {dom, fixture} from './utils.test';
 
 it('throws for undefiend', () => {
   expect(() => toArray()).toThrow();
@@ -26,8 +26,7 @@ it('returns array for array-like', () => {
 });
 
 it('returns Nodes[] for NodeList', () => {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(fixture('to-array'), 'text/html');
+  const doc = dom(fixture('to-array'));
   const input = doc.querySelectorAll('*');
   const result = toArray(input);
   expect(input[0]).toBe(result[0]);
@@ -36,8 +35,7 @@ it('returns Nodes[] for NodeList', () => {
 });
 
 it('returns CSSRule[] for CSSRuleList', () => {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(fixture('to-array'), 'text/html');
+  const doc = dom(fixture('to-array'));
   const input = doc.querySelector('style').sheet.cssRules;
   const result = toArray(input);
   expect(input[0]).toBe(result[0]);
@@ -47,8 +45,7 @@ it('returns CSSRule[] for CSSRuleList', () => {
 });
 
 it('returns string[] for CSSStyleDeclaration', () => {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(fixture('to-array'), 'text/html');
+  const doc = dom(fixture('to-array'));
   const input = doc.querySelector('style').sheet.cssRules[0].style;
   const result = toArray(input);
   expect(input[0]).toBe(result[0]);

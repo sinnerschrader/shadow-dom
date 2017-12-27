@@ -1,5 +1,5 @@
 import {flattenRules} from './flatten-rules';
-import {fixture} from './utils.test';
+import {dom, fixture} from './utils.test';
 
 it('throws for undefined', () => {
   expect(() => flattenRules()).toThrow();
@@ -16,8 +16,7 @@ it('returns [] input unchanged', () => {
 });
 
 it('returns CSSRule[] for CSSRuleList', () => {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(fixture('flatten-rules-basic'), 'text/html');
+  const doc = dom(fixture('flatten-rules-basic'));
   const input = doc.querySelector('style').sheet.cssRules;
 
   const actual = flattenRules(input);
@@ -27,8 +26,7 @@ it('returns CSSRule[] for CSSRuleList', () => {
 });
 
 it('unwraps media queries', () => {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(fixture('flatten-rules-media'), 'text/html');
+  const doc = dom(fixture('flatten-rules-media'));
   const input = doc.querySelector('style').sheet.cssRules;
 
   const actual = flattenRules(input);
@@ -40,8 +38,7 @@ it('unwraps media queries', () => {
 });
 
 it('strips media queries', () => {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(fixture('flatten-rules-media'), 'text/html');
+  const doc = dom(fixture('flatten-rules-media'));
   const input = doc.querySelector('style').sheet.cssRules;
 
   const actual = flattenRules(input);
@@ -52,8 +49,7 @@ it('strips media queries', () => {
 });
 
 it('unwraps support queries', () => {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(fixture('flatten-rules-supports'), 'text/html');
+  const doc = dom(fixture('flatten-rules-supports'));
   const input = doc.querySelector('style').sheet.cssRules;
 
   // Bail out if @supports unsupported
@@ -70,8 +66,7 @@ it('unwraps support queries', () => {
 });
 
 it('strips supports queries', () => {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(fixture('flatten-rules-supports'), 'text/html');
+  const doc = dom(fixture('flatten-rules-supports'));
   const input = doc.querySelector('style').sheet.cssRules;
 
   const actual = flattenRules(input);
@@ -82,8 +77,7 @@ it('strips supports queries', () => {
 });
 
 it('unwraps nested queries', () => {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(fixture('flatten-rules-nested'), 'text/html');
+  const doc = dom(fixture('flatten-rules-nested'));
   const input = doc.querySelector('style').sheet.cssRules;
 
   // Bail out if @supports unsupported
@@ -102,8 +96,7 @@ it('unwraps nested queries', () => {
 });
 
 it('returns FONT_FACE_RULE unchanged', () => {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(fixture('flatten-rules-fontface'), 'text/html');
+  const doc = dom(fixture('flatten-rules-fontface'));
   const input = doc.querySelector('style').sheet.cssRules;
   const expected = input[0];
   const actual = flattenRules(input)[0];
@@ -111,8 +104,7 @@ it('returns FONT_FACE_RULE unchanged', () => {
 });
 
 it('returns PAGE_RULE unchanged', () => {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(fixture('flatten-rules-page'), 'text/html');
+  const doc = dom(fixture('flatten-rules-page'));
   const input = doc.querySelector('style').sheet.cssRules;
   const expected = input[0];
   const actual = flattenRules(input)[0];
@@ -120,8 +112,7 @@ it('returns PAGE_RULE unchanged', () => {
 });
 
 it('returns KEYFRAMES_RULE unchanged', () => {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(fixture('flatten-rules-keyframes'), 'text/html');
+  const doc = dom(fixture('flatten-rules-keyframes'));
   const input = doc.querySelector('style').sheet.cssRules;
   const expected = input[0];
   const actual = flattenRules(input)[0];
@@ -129,8 +120,7 @@ it('returns KEYFRAMES_RULE unchanged', () => {
 });
 
 it('returns NAMESPACE_RULE unchanged', () => {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(fixture('flatten-rules-namespace'), 'text/html');
+  const doc = dom(fixture('flatten-rules-namespace'));
   const input = doc.querySelector('style').sheet.cssRules;
   const expected = input[0];
   const actual = flattenRules(input)[0];
@@ -138,8 +128,7 @@ it('returns NAMESPACE_RULE unchanged', () => {
 });
 
 it('returns COUNTER_STYLE_RULE unchanged', () => {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(fixture('flatten-rules-counterstyle'), 'text/html');
+  const doc = dom(fixture('flatten-rules-counterstyle'));
   const input = doc.querySelector('style').sheet.cssRules;
   const expected = input[0];
   const actual = flattenRules(input)[0];
@@ -147,8 +136,7 @@ it('returns COUNTER_STYLE_RULE unchanged', () => {
 });
 
 it('returns DOCUMENT_RULE unchanged', () => {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(fixture('flatten-rules-document'), 'text/html');
+  const doc = dom(fixture('flatten-rules-document'));
   const input = doc.querySelector('style').sheet.cssRules;
   const expected = input[0];
   const actual = flattenRules(input)[0];
@@ -156,17 +144,7 @@ it('returns DOCUMENT_RULE unchanged', () => {
 });
 
 it('returns FONT_FEATURE_VALUES_RULE unchanged', () => {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(fixture('flatten-rules-fontfeatures'), 'text/html');
-  const input = doc.querySelector('style').sheet.cssRules;
-  const expected = input[0];
-  const actual = flattenRules(input)[0];
-  expect(actual).toBe(expected);
-});
-
-it('returns FONT_FEATURE_VALUES_RULE unchanged', () => {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(fixture('flatten-rules-fontfeatures'), 'text/html');
+  const doc = dom(fixture('flatten-rules-fontfeatures'));
   const input = doc.querySelector('style').sheet.cssRules;
   const expected = input[0];
   const actual = flattenRules(input)[0];
@@ -174,8 +152,7 @@ it('returns FONT_FEATURE_VALUES_RULE unchanged', () => {
 });
 
 it('returns VIEWPORT_RULE unchanged', () => {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(fixture('flatten-rules-viewport'), 'text/html');
+  const doc = dom(fixture('flatten-rules-viewport'));
   const input = doc.querySelector('style').sheet.cssRules;
   const expected = input[0];
   const actual = flattenRules(input)[0];
@@ -183,8 +160,7 @@ it('returns VIEWPORT_RULE unchanged', () => {
 });
 
 it('returns REGION_RULE unchanged', () => {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(fixture('flatten-rules-region'), 'text/html');
+  const doc = dom(fixture('flatten-rules-region'));
   const input = doc.querySelector('style').sheet.cssRules;
   const expected = input[0];
   const actual = flattenRules(input)[0];
