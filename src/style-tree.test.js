@@ -1,3 +1,4 @@
+import find from 'lodash.find';
 import {parse} from './style-tree';
 import {fixture} from './utils.test';
 
@@ -88,7 +89,7 @@ it('attaches pseudo elements to hosts', () => {
 
 it('sorts rules descending by specificity', () => {
   const html = fixture('tree-specificity');
-  const div = parse(html).find(i => i.tagName === 'DIV');
+  const div = find(parse(html), i => i.tagName === 'DIV');
   const selectors = div.rules.map(r => r.selectorText);
   expect(selectors).toEqual(['#a', '.a.a', '[data-a]', '.a']);
 });
@@ -96,8 +97,8 @@ it('sorts rules descending by specificity', () => {
 it('sorts pseudo element rules descending by specificity', () => {
   const html = fixture('tree-pseudo-element-specificity');
   const list = parse(html);
-  const div = list.find(i => i.tagName === 'DIV');
-  const span = list.find(i => i.tagName === 'SPAN');
+  const div = find(list, i => i.tagName === 'DIV');
+  const span = find(list, i => i.tagName === 'SPAN');
   const after = div.before.map(r => r.selectorText);
   const before = span.after.map(r => r.selectorText);
 
@@ -107,7 +108,7 @@ it('sorts pseudo element rules descending by specificity', () => {
 
 it('honors source order', () => {
   const list = parse(fixture('tree-source-order'));
-  const span = list.find(i => i.tagName === 'SPAN');
+  const span = find(list, i => i.tagName === 'SPAN');
   const colors = span.rules.map(r => r.style.getPropertyValue('color'));
   expect(colors).toEqual(['green', 'red']);
 });

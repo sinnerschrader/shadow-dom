@@ -83,6 +83,7 @@
     "karma-safari-launcher": "^1.0.0",
     "karma-viewport": "^0.4.2",
     "karma-webpack": "^2.0.5",
+    "lodash.find": "^4.6.0",
     "meow": "^4.0.0",
     "puppeteer": "^0.13.0",
     "raw-loader": "^0.5.1",
