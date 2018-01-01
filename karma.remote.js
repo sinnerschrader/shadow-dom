@@ -1,5 +1,8 @@
+const env = require('dotenv');
 const meow = require('meow');
 const cli = meow();
+
+env.config();
 
 const DEFAULT_BROWSERS = [
   'bs_chrome',
@@ -11,8 +14,8 @@ const DEFAULT_BROWSERS = [
 
 module.exports = config => {
   if (!process.env.BROWSER_STACK_USERNAME || !process.env.BROWSER_STACK_ACCESS_KEY) {
-    console.log('Falling back to local tests as BROWSER_STACK_USERNAME and BROWSER_STACK_ACCESS_KEY are not set.');
-    return require('./karma.local.js')(config);
+    console.log(`BROWSER_STACK_USERNAME and BROWSER_STACK_ACCESS_KEY must be set for test --remote`);
+    process.exit(1);
   }
 
   const indicated = [

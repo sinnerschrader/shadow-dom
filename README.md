@@ -23,13 +23,20 @@ npx yarn test
 
 `shadow-dom` ensures functionality via cross browser testing
 
-* `npm test`: Headless Chrome, Headless Firefox
-* `BROWSER_STACK_USERNAME=<username> BROWSER_STACK_ACCESS_KEY=<password> npm test`
+* `yarm test --local`: Headless Chrome, Headless Firefox
+* `yarn test --remote`: Test on BrowserStack
+
+Remote tests require BrowserStack credentials. Provide them by CLI or a `.env` file:
+
+```ini
+BROWSER_STACK_USERNAME=[browserstack-username]
+BROWSER_STACK_ACCESS_KEY=[browserstack-access-key]
+```
 
 Testing may optionally be limited to browsers via cli flags
 
-* `npm test -- --firefox` Test only in Firefox
-* `npm test -- --chrome` Test only in Chrome
+* `yarn test -- --firefox` Test only in Firefox
+* `yarn test -- --chrome` Test only in Chrome
 
 ```sh
 # All flags

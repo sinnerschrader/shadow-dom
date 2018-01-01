@@ -9,7 +9,7 @@
     "pack": "webpack",
     "babel": "babel src -d lib",
     "lint": "xo",
-    "test": "karma start karma.remote.js"
+    "test": "karma start karma.js"
   },
   "babel": {
     "ignore": [
@@ -73,6 +73,7 @@
     "babel-loader": "^7.1.2",
     "babel-plugin-transform-object-assign": "^6.22.0",
     "babel-preset-env": "^1.6.1",
+    "dotenv": "^4.0.0",
     "jasmine-core": "^2.8.0",
     "karma": "^1.7.1",
     "karma-browserstack-launcher": "^1.3.0",
