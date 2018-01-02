@@ -112,3 +112,15 @@ it('honors source order', () => {
   const colors = span.rules.map(r => r.style.getPropertyValue('color'));
   expect(colors).toEqual(['green', 'red']);
 });
+
+it('splits rules with multiple selectors', () => {
+  const list = parse(fixture('tree-multiple-selectors'));
+  const span = find(list, i => i.tagName === 'SPAN');
+
+  const selectors = span.rules.map(r => r.selectorText);
+  expect(selectors).toContain(jasmine.arrayContaining([
+    '.a',
+    'span',
+    'span.a',
+  ]));
+});
