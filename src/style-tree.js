@@ -3,7 +3,7 @@ import specificity from 'specificity';
 import {elementMatches} from './element-matches';
 import {flattenRules} from './flatten-rules';
 import {getPathByElement} from './get-path-by-element';
-import * as List from './node-list';
+import * as List from './list';
 import {pushTo} from './push-to';
 
 const DEFAULT_DOC = '<html><head></head><body></body></html>';
