@@ -13,3 +13,8 @@ it('returns null for non-existent path', () => {
   const doc = dom('<html></html>');
   expect(getElementByPath([1337], doc)).toBe(null);
 });
+
+it('returns null for non-existent nested path', () => {
+  const doc = dom('<html></html>');
+  expect(getElementByPath([0, 1337, 1337], doc)).toBe(null);
+});
