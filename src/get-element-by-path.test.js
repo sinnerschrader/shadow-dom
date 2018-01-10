@@ -18,3 +18,14 @@ it('returns null for non-existent nested path', () => {
   const doc = dom('<html></html>');
   expect(getElementByPath([0, 1337, 1337], doc)).toBe(null);
 });
+
+it('returns expected document', () => {
+  const doc = dom('<html><body></body></html>');
+  expect(getElementByPath([], doc)).toBe(doc);
+});
+
+it('returns expected element', () => {
+  const doc = dom('<html><body><div id="expected"></div></body></html>');
+  const expected = doc.getElementById('expected');
+  expect(getElementByPath([0, 1, 0], doc)).toBe(expected);
+});
