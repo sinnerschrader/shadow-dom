@@ -1,5 +1,5 @@
 import find from 'lodash.find';
-import {parse} from './style-tree';
+import {parse} from './style-list';
 import {fixture} from './utils.test';
 
 it('throws for empty input', () => {
