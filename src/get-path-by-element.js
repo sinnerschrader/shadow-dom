@@ -7,16 +7,16 @@ export function getPathByElement(element, base) {
     throw new TypeError(`get-path-by-element: base must be instance of Node`);
   }
 
-  const selector = [];
+  const path = [];
   let current = element;
 
   while (current.parentNode && current !== base) {
     const count = getElementIndex(current);
-    selector.unshift(count);
+    path.unshift(count);
     current = current.parentNode;
   }
 
-  return selector;
+  return path;
 }
 
 function getElementIndex(element) {
