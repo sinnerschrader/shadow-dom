@@ -12,6 +12,6 @@ export function getElementByPath(path, base) {
   return path.reduce((el, index) => {
     // TODO: Verify this is no unduly drag on performance
     const childElements = List.filter(el.childNodes, n => n.nodeType === Node.ELEMENT_NODE);
-    return childElements[index];
+    return childElements[index] || null;
   }, base);
 }

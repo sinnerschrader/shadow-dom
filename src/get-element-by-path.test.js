@@ -8,3 +8,8 @@ it('throws for missing path', () => {
 it('throws for missing base', () => {
   expect(() => getElementByPath([])).toThrowError(/base must be instance of Node/);
 });
+
+it('returns null for non-existent path', () => {
+  const doc = dom('<html></html>');
+  expect(getElementByPath([1337], doc)).toBe(null);
+});

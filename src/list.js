@@ -1,7 +1,12 @@
 export {
+  filter,
+  map,
   reduce,
-  map
 };
+
+function filter(list, ...args) {
+  return Array.prototype.filter.call(list, ...args);
+}
 
 function map(list, ...args) {
   return Array.prototype.map.call(list, ...args);
