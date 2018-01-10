@@ -7,5 +7,5 @@ export function inPath(path, base) {
     throw new TypeError(`base must be array of integers, received ${base}`);
   }
 
-  return base.every((n, i) => base[i] === n);
+  return base.every((n, i) => path[i] === n);
 }

@@ -15,3 +15,11 @@ it('returns true for two empty paths', () => {
 it('returns true for equal paths', () => {
   expect(inPath([1, 2, 3], [1, 2, 3])).toEqual(true);
 });
+
+it('returns true for contained path', () => {
+  expect(inPath([1, 2, 3, 0, 3], [1, 2, 3])).toEqual(true);
+});
+
+it('returns false for uncontained path', () => {
+  expect(inPath([1, 2, 4, 0, 3], [1, 2, 3])).toEqual(false);
+});
