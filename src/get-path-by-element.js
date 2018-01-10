@@ -8,26 +8,15 @@ export function getPathByElement(element, base) {
   }
 
   const selector = [];
-  const isBase = checkBase(base);
   let current = element;
 
-  while (current.parentNode && !isBase(current)) {
+  while (current.parentNode && current !== base) {
     const count = getElementIndex(current);
     selector.unshift(count);
     current = current.parentNode;
   }
 
   return selector;
-}
-
-function checkBase(base) {
-  const tagName = typeof base === 'string' ?
-    base.toUpperCase() :
-    '';
-
-  return typeof base === 'string' ?
-    current => current.tagName === tagName :
-    current => current === base;
 }
 
 function getElementIndex(element) {
