@@ -77,7 +77,7 @@ export function shadowDom(el) { // eslint-disable-line import/prefer-default-exp
               return acc;
             }, []);
 
-          const mount = getElementByPath(getPathByElement(el, outerDoc), outerDoc);
+          const mount = getElementByPath(getPathByElement(el, document.documentElement), outerDoc.documentElement);
           mount.innerHTML = innerHTML;
 
           const shielding = flattenedOuterRules

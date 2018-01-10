@@ -7,6 +7,20 @@ export function getPathByElement(element, base) {
     throw new TypeError(`get-path-by-element: base must be instance of Node`);
   }
 
+  let pre = element;
+
+  while (pre.parentNode && pre !== base) {
+    pre = pre.parentNode;
+    continue;
+  }
+
+  // Went through all parents but the last match
+  // is not the indicated root node. This means "base"
+  // does not contain "pre", return null in this case
+  if (pre !== base) {
+    return null;
+  }
+
   const path = [];
   let current = element;
 
