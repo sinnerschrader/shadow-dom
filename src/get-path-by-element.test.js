@@ -5,6 +5,11 @@ it('throws for missing element', () => {
   expect(() => getPathByElement()).toThrowError(/element must be instance of Node/);
 });
 
+it('throws for missing base', () => {
+  const doc = dom('<html><body></body></html>', 'text/html');
+  expect(() => getPathByElement(doc.documentElement)).toThrowError(/base must be instance of Node/);
+});
+
 it('works for document element', () => {
   const doc = dom('<html><body></body></html>', 'text/html');
   expect(getPathByElement(doc.documentElement, doc.documentElement)).toEqual([]);
