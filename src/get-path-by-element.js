@@ -1,6 +1,10 @@
-export function getPathByElement(element, base = 'body') {
+export function getPathByElement(element, base) {
   if (!element) {
     throw new TypeError(`get-path-by-element: element must be instance of Node`);
+  }
+
+  if (!base) {
+    throw new TypeError(`get-path-by-element: base must be instance of Node`);
   }
 
   const selector = [];
