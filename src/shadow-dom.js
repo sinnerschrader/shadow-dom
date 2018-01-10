@@ -2,6 +2,7 @@ import selectorParser from 'postcss-selector-parser';
 import shortid from 'shortid';
 import specificity from 'specificity';
 import {flattenRules} from './flatten-rules';
+import {getElementByPath} from './get-element-by-path';
 import {getPathByElement} from './get-path-by-element';
 import {pushTo} from './push-to';
 import {toArray} from './to-array';
@@ -391,14 +392,6 @@ function find(arr, predicate) {
 function getAll() {
   // TODO: filter some props as per spec
   return toArray(window.getComputedStyle(document.body), 0);
-}
-
-function getElementByPath(elementPath, base) {
-  return elementPath.reduce((el, index) => {
-    const childElements = toArray(el.childNodes, 0)
-      .filter(n => n.nodeType === Node.ELEMENT_NODE);
-    return childElements[index];
-  }, base);
 }
 
 function getElementIndex(element) {
