@@ -12,16 +12,16 @@ it('works for empty string', () => {
 
 it('creates doc for empty string', () => {
   const actual = parse('');
-  expect(actual).toContain(jasmine.objectContaining({tagName: 'HTML', path: []}));
-  expect(actual).toContain(jasmine.objectContaining({tagName: 'HEAD', path: [0]}));
-  expect(actual).toContain(jasmine.objectContaining({tagName: 'BODY', path: [1]}));
+  expect(actual).toContain(jasmine.objectContaining({tagName: 'HTML', path: [0]}));
+  expect(actual).toContain(jasmine.objectContaining({tagName: 'HEAD', path: [0, 0]}));
+  expect(actual).toContain(jasmine.objectContaining({tagName: 'BODY', path: [0, 1]}));
 });
 
 it('creates doc with expected elements', () => {
   const html = fixture('tree-basic');
   const actual = parse(html);
-  expect(actual).toContain(jasmine.objectContaining({tagName: 'DIV', path: [1, 0]}));
-  expect(actual).toContain(jasmine.objectContaining({tagName: 'SPAN', path: [1, 1]}));
+  expect(actual).toContain(jasmine.objectContaining({tagName: 'DIV', path: [0, 1, 0]}));
+  expect(actual).toContain(jasmine.objectContaining({tagName: 'SPAN', path: [0, 1, 1]}));
 });
 
 it('matches basic rules as expected', () => {
@@ -30,7 +30,7 @@ it('matches basic rules as expected', () => {
 
   expect(actual).toContain(jasmine.objectContaining({
     tagName: 'DIV',
-    path: [1, 0],
+    path: [0, 1, 0],
     rules: jasmine.arrayContaining([
       jasmine.objectContaining({selectorText: 'div'})
     ])
@@ -38,7 +38,7 @@ it('matches basic rules as expected', () => {
 
   expect(actual).toContain(jasmine.objectContaining({
     tagName: 'SPAN',
-    path: [1, 1],
+    path: [0, 1, 1],
     rules: jasmine.arrayContaining([
       jasmine.objectContaining({selectorText: 'span'})
     ])
@@ -51,7 +51,7 @@ it('matches media query rules as expected', () => {
 
   expect(actual).toContain(jasmine.objectContaining({
     tagName: 'DIV',
-    path: [1, 0],
+    path: [0, 1, 0],
     rules: jasmine.arrayContaining([
       jasmine.objectContaining({selectorText: '.a'})
     ])
@@ -59,7 +59,7 @@ it('matches media query rules as expected', () => {
 
   expect(actual).toContain(jasmine.objectContaining({
     tagName: 'SPAN',
-    path: [1, 1],
+    path: [0, 1, 1],
     rules: jasmine.arrayContaining([
       jasmine.objectContaining({selectorText: '.b'})
     ])
@@ -72,7 +72,7 @@ it('attaches pseudo elements to hosts', () => {
 
   expect(actual).toContain(jasmine.objectContaining({
     tagName: 'DIV',
-    path: [1, 0],
+    path: [0, 1, 0],
     before: jasmine.arrayContaining([
       jasmine.objectContaining({selectorText: 'div::before'})
     ])
@@ -80,7 +80,7 @@ it('attaches pseudo elements to hosts', () => {
 
   expect(actual).toContain(jasmine.objectContaining({
     tagName: 'SPAN',
-    path: [1, 1],
+    path: [0, 1, 1],
     after: jasmine.arrayContaining([
       jasmine.objectContaining({selectorText: 'span::after'})
     ])

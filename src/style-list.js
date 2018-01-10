@@ -28,7 +28,7 @@ export function parse(rawSource) {
   return List.map(doc.querySelectorAll('*'), (node) => {
     return {
       tagName: node.tagName,
-      path: getPathByElement(node, doc.documentElement),
+      path: getPathByElement(node, doc),
       rules: rules.filter(rule => elementMatches(node, rule.selectorText)),
       after: rules.filter(rule => elementHasPseudo(node, rule.selectorText, {pseudo: 'after'})),
       before: rules.filter(rule => elementHasPseudo(node, rule.selectorText, {pseudo: 'before'}))
