@@ -2,6 +2,7 @@ import selectorParser from 'postcss-selector-parser';
 import shortid from 'shortid';
 import specificity from 'specificity';
 import {flattenRules} from './flatten-rules';
+import {getPathByElement} from './get-path-by-element';
 import {pushTo} from './push-to';
 import {toArray} from './to-array';
 
@@ -76,7 +77,7 @@ export function shadowDom(el) { // eslint-disable-line import/prefer-default-exp
               return acc;
             }, []);
 
-          const mount = getElementByPath(getPathByElement(el), outerDoc);
+          const mount = getElementByPath(getPathByElement(el, outerDoc), outerDoc);
           mount.innerHTML = innerHTML;
 
           const shielding = flattenedOuterRules
@@ -392,25 +393,12 @@ function getAll() {
   return toArray(window.getComputedStyle(document.body), 0);
 }
 
-function getPathByElement(element, base) {
-  const selector = [];
-  let current = element;
-
-  while (current.parentNode && base ? current !== base : current.tagName.toLowerCase() !== 'body') {
-    const count = getElementIndex(current);
-    selector.unshift(count);
-    current = current.parentNode;
-  }
-
-  return selector;
-}
-
-function getElementByPath(elementPath, doc) {
+function getElementByPath(elementPath, base) {
   return elementPath.reduce((el, index) => {
     const childElements = toArray(el.childNodes, 0)
       .filter(n => n.nodeType === Node.ELEMENT_NODE);
     return childElements[index];
-  }, doc.body);
+  }, base);
 }
 
 function getElementIndex(element) {
