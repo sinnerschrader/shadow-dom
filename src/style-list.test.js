@@ -109,7 +109,7 @@ it('sorts pseudo element rules descending by specificity', () => {
 it('honors source order', () => {
   const list = parse(fixture('tree-source-order'));
   const span = find(list, i => i.tagName === 'SPAN');
-  const colors = span.rules.map(r => r.style.getPropertyValue('color'));
+  const colors = span.rules.map(r => r.style.color);
   expect(colors).toEqual(['green', 'red']);
 });
 
@@ -123,4 +123,17 @@ it('splits rules with multiple selectors', () => {
     'span',
     'span.a',
   ]));
+});
+
+it('records expected path for containing stylesheets', () => {
+  const list = parse(fixture('tree-stylesheet-paths'));
+  const a = find(list, i => i.tagName === 'X-FIXTURE');
+
+  const id = find(a.rules, r => r.selectorText === '#a');
+  const className = find(a.rules, r => r.selectorText === '.a');
+  const attr = find(a.rules, r => r.selectorText === '[data-a]');
+
+  expect(id.styleSheetPath).toEqual([0, 1, 0]);
+  expect(className.styleSheetPath).toEqual([0, 1, 1, 0, 0]);
+  expect(attr.styleSheetPath).toEqual([0, 1, 2]);
 });

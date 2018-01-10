@@ -46,12 +46,26 @@ function elementHasPseudo(node, selectorText, {pseudo}) {
 
 function splitRule(rule) {
   return rule.selectorText.split(',')
-    .map(selectorText => ({
-      cssText: rule.cssText,
-      style: rule.style,
-      selectorText: selectorText.trim(),
-      type: rule.type,
-      parentRule: rule.parentRule,
-      parentStyleSheet: rule.parentStyleSheet
-    }));
+    .map(selectorText => createRule(rule, {selectorText}));
+}
+
+function createRule(cssRule, overrides) {
+  const node = cssRule.parentStyleSheet.ownerNode;
+  const doc = node.ownerDocument;
+
+  return {
+    cssText: cssRule.cssText,
+    style: styleToMap(cssRule.style),
+    selectorText: (overrides.selectorText || cssRule.selectorText).trim(),
+    type: cssRule.type,
+    parentRule: cssRule.parentRule, // TODO: Do not expose entire parentRules, simplify too
+    styleSheetPath: getPathByElement(node, doc)
+  };
+}
+
+function styleToMap(style) {
+  return List.reduce(style, (acc, name) => {
+    acc[name] = style.getPropertyValue(name);
+    return acc;
+  }, {});
 }
