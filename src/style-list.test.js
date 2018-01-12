@@ -109,7 +109,7 @@ it('sorts pseudo element rules descending by specificity', () => {
 it('honors source order', () => {
   const list = parse(fixture('tree-source-order'));
   const span = find(list, i => i.tagName === 'SPAN');
-  const colors = span.rules.map(r => r.style.color);
+  const colors = span.rules.map(r => r.style.color.value);
   expect(colors).toEqual(['green', 'red']);
 });
 

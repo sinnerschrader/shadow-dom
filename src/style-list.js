@@ -59,13 +59,42 @@ function createRule(cssRule, overrides) {
     selectorText: (overrides.selectorText || cssRule.selectorText).trim(),
     type: cssRule.type,
     parentRule: cssRule.parentRule, // TODO: Do not expose entire parentRules, simplify too
-    styleSheetPath: getPathByElement(node, doc)
+    styleSheetPath: getPathByElement(node, doc),
+    rulePath: getPathByRule(cssRule, node.sheet)
   };
 }
 
 function styleToMap(style) {
   return List.reduce(style, (acc, name) => {
-    acc[name] = style.getPropertyValue(name);
+    acc[name] = {
+      value: style.getPropertyValue(name),
+      prioroty: style.getPropertyPriority(name)
+    };
     return acc;
   }, {});
+}
+
+function getPathByRule(cssRule, sheet) {
+  let current = cssRule;
+
+  const path = [];
+
+  while (current.parentRule || current.parentStyleSheet) {
+    path.unshift(getRuleIndex(current));
+    current = (current.parentRule || current.parentStyleSheet);
+  }
+
+  return path;
+}
+
+function getRuleIndex(rule) {
+  const p = rule.parentRule || rule.parentStyleSheet;
+
+  for (let i = 0; i < p.cssRules.length; i++) {
+    if (p.cssRules[i] === rule) {
+      return i;
+    }
+  }
+
+  return -1;
 }
