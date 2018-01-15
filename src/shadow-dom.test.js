@@ -30,7 +30,7 @@ it('is plain element if unsupported', () => {
   cleanup();
 });
 
-it('enforces basic scoping', () => {
+it('interrupts the cascade', () => {
   const {scope, cleanup} = bootstrap('basic-scope');
 
   if (!HAS_SHADOWDOM) {
@@ -296,7 +296,7 @@ it('protects from !important rules with escalating specificity', () => {
     expect(color).toBe('rgb(0, 0, 0)');
   }
 
-  // cleanup();
+  cleanup();
 });
 
 it('protects from !important pseudo element rules with escalating specificity', () => {
@@ -403,7 +403,7 @@ it('handles invalid css selectors gracefully', () => {
   cleanup();
 });
 
-it('encapsulates against selectors matching mount point', () => {
+fit('encapsulates against selectors matching mount point', () => {
   const {scope, cleanup} = bootstrap('mount-selector');
 
   if (!HAS_SHADOWDOM) {
@@ -413,7 +413,7 @@ it('encapsulates against selectors matching mount point', () => {
     expect(innerColor).toBe('rgb(0, 128, 0)');
   }
 
-  cleanup();
+  // cleanup();
 });
 
 it('protects default-hidden elements against revealing styles', () => {

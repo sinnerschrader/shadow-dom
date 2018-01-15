@@ -5,20 +5,11 @@ import {flattenRules} from './flatten-rules';
 import {getPathByElement} from './get-path-by-element';
 import * as List from './list';
 import {pushTo} from './push-to';
+import {splitRule} from './split-rule';
 
 const DEFAULT_DOC = '<html><head></head><body></body></html>';
 
-export function parse(rawSource) {
-  if (typeof rawSource === 'undefined') {
-    throw new TypeError(`style-tree.parse: missing required parameter source`);
-  }
-
-  const source = rawSource === '' ? DEFAULT_DOC : rawSource;
-
-  const doc = typeof rawSource === 'string'
-    ? new DOMParser().parseFromString(source, 'text/html')
-    : rawSource;
-
+export function parse(doc) {
   const rules = List
     .reduce(doc.getElementsByTagName('style'), (acc, style) => pushTo(acc, flattenRules(style.sheet.cssRules)), [])
     .filter(rule => rule.type === CSSRule.STYLE_RULE)
@@ -44,57 +35,3 @@ function elementHasPseudo(node, selectorText, {pseudo}) {
   return elementMatches(node, selector);
 }
 
-function splitRule(rule) {
-  return rule.selectorText.split(',')
-    .map(selectorText => createRule(rule, {selectorText}));
-}
-
-function createRule(cssRule, overrides) {
-  const node = cssRule.parentStyleSheet.ownerNode;
-  const doc = node.ownerDocument;
-
-  return {
-    cssText: cssRule.cssText,
-    style: styleToMap(cssRule.style),
-    selectorText: (overrides.selectorText || cssRule.selectorText).trim(),
-    type: cssRule.type,
-    parentRule: cssRule.parentRule, // TODO: Do not expose entire parentRules, simplify too
-    styleSheetPath: getPathByElement(node, doc),
-    rulePath: getPathByRule(cssRule, node.sheet)
-  };
-}
-
-function styleToMap(style) {
-  return List.reduce(style, (acc, name) => {
-    acc[name] = {
-      value: style.getPropertyValue(name),
-      prioroty: style.getPropertyPriority(name)
-    };
-    return acc;
-  }, {});
-}
-
-function getPathByRule(cssRule, sheet) {
-  let current = cssRule;
-
-  const path = [];
-
-  while (current.parentRule || current.parentStyleSheet) {
-    path.unshift(getRuleIndex(current));
-    current = (current.parentRule || current.parentStyleSheet);
-  }
-
-  return path;
-}
-
-function getRuleIndex(rule) {
-  const p = rule.parentRule || rule.parentStyleSheet;
-
-  for (let i = 0; i < p.cssRules.length; i++) {
-    if (p.cssRules[i] === rule) {
-      return i;
-    }
-  }
-
-  return -1;
-}
