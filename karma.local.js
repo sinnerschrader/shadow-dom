@@ -10,11 +10,13 @@ module.exports = config => {
     'firefox' in cli.flags ||
     'ie' in cli.flags;
 
+  const pattern = 'pattern' in cli.flags ? `src/**/${cli.flags.pattern}` : 'src/**/*.test.js';
+
   config.set({
     basePath: '',
     frameworks: ['jasmine', 'viewport'],
     files: [
-      {pattern: 'src/**/*.test.js', watched: false},
+      {pattern, watched: false},
       {pattern: './fixtures/*', included: false, served: true}
     ],
     preprocessors: {
