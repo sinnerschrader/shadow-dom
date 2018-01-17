@@ -39,10 +39,10 @@ export function diff(styleNode, mountPath) {
       // outer styles overrides local style illegally
       if (ev) {
         return {
-          type: 'scope',
+          type: 'add',
           prop,
           value: ev,
-          priority: ev.priority || a.priority,
+          priority: (ev.priority || a.priority) === 'important' ? '!important' : '',
           rule: e.rule
         };
       }
@@ -50,10 +50,10 @@ export function diff(styleNode, mountPath) {
       // outer style adds new prop illegally
       if (av) {
         return {
-          type: 'add',
+          type: 'subtract',
           prop,
           value: 'initial',
-          priority: a.priority,
+          priority: a.priority === 'important' ? '!important' : '',
           rule: inside[0],
           outerRule: a.rule
         };

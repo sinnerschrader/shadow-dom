@@ -311,7 +311,7 @@ it('protects from !important pseudo element rules with escalating specificity', 
   cleanup();
 });
 
-it('protects from !impotant pseudo classes with escalating specificity', () => {
+it('protects from !important pseudo classes with escalating specificity', () => {
   const {scope, cleanup} = bootstrap('important-id-specificity-pseudo-classes');
 
   if (!HAS_SHADOWDOM) {
@@ -403,7 +403,7 @@ it('handles invalid css selectors gracefully', () => {
   cleanup();
 });
 
-fit('encapsulates against selectors matching mount point', () => {
+it('encapsulates against selectors matching mount point', () => {
   const {scope, cleanup} = bootstrap('mount-selector');
 
   if (!HAS_SHADOWDOM) {
@@ -413,7 +413,7 @@ fit('encapsulates against selectors matching mount point', () => {
     expect(innerColor).toBe('rgb(0, 128, 0)');
   }
 
-  // cleanup();
+  cleanup();
 });
 
 it('protects default-hidden elements against revealing styles', () => {

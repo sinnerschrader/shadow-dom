@@ -1,10 +1,10 @@
 import shortid from 'shortid';
 import specificity from 'specificity';
-import selectorParser from 'postcss-selector-parser';
 
 import {diff} from './diff';
 import {flattenRules} from './flatten-rules';
 import * as List from './list';
+import {parseSelector} from './parse-selector';
 import {pushTo} from './push-to';
 import * as styleList from './style-list';
 import {splitRule} from './split-rule';
@@ -82,11 +82,16 @@ function createShadowRoot(el) {
         .filter(n => inPath(n.path, mountPath))
         .reduce((acc, i) => pushTo(acc, diff(i, mountPath)), [])
         .forEach(edit => {
-          if (edit.type === 'add' && !edit.rule) {
-            const i = selectorInside(edit.outerRule.selectorText, {doc, elPath: mountPath});
-            const o = selectorOutside(edit.outerRule.selectorText, {doc, elPath: mountPath});
-            shieldEl.textContent += `${o} ${escalator} ${i} { ${edit.prop}: ${edit.value}!important; }`;
+          switch (edit.type) {
+            case 'subtract': {
+              const [{specificityArray: [, spec]}] = specificity.calculate(edit.outerRule.selectorText);
+              const inside = selectorInside(edit.outerRule.selectorText, {doc, elPath: mountPath});
+              const prefix = `[data-shadow-dom-root="${id}"]${range(spec + 1, `:not(#${noop})`).join('')}`;
+              shieldEl.textContent += `${prefix} ${inside} { ${edit.prop}: ${edit.value}${edit.priority}; }`;
+              // TODO: Find rules that are influenced by this one and rewrite them
+            }
           }
+
         });
 
       base.innerHTML = mountBase.innerHTML;
@@ -338,19 +343,6 @@ function selectorOutside(selector, {doc, elPath}) {
   const inside = selectorInside(selector, {doc, elPath});
   const head = selector.substring(0, selector.indexOf(inside));
   return head;
-}
-
-function parseSelector(selector) {
-  const result = [];
-
-  const transform = selectors => {
-    selectors.last.nodes.forEach(node => {
-      result.push(node);
-    });
-  };
-
-  selectorParser(transform).processSync(selector);
-  return result;
 }
 
 function containsMatching(selector, {doc, elPath}) {
