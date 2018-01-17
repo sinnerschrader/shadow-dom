@@ -11,6 +11,7 @@ import {splitRule} from './split-rule';
 import {getElementByPath} from './get-element-by-path';
 import {getPathByElement} from './get-path-by-element';
 import {inPath} from './in-path';
+import {specificityMagnitude} from './specificity-magnitude';
 
 export function shadowDom(el) {  // eslint-disable-line import/prefer-default-export
   el.innerHTML = '';
@@ -62,9 +63,9 @@ function createShadowRoot(el) {
           return acc;
         }, []);
 
-      const {specificityArray: [, spec]} = outerRules.length > 0
-        ? specificity.calculate(outerRules.sort((a, b) => specificity.compare(a.selectorText, b.selectorText))[0].selectorText)[0]
-        : {specificityArray: [0, 0, 0, 0]};
+      const spec = outerRules.length > 0
+        ? outerRules.map(o => specificityMagnitude(o.selectorText)).sort((a, b) => a - b)
+        : 0;
 
       interrupt(el, {id, initialFor, noop, spec});
       const shieldEl = el.querySelector(`[data-shadow-dom-initial="${id}"]`);
@@ -82,16 +83,10 @@ function createShadowRoot(el) {
         .filter(n => inPath(n.path, mountPath))
         .reduce((acc, i) => pushTo(acc, diff(i, mountPath)), [])
         .forEach(edit => {
-          switch (edit.type) {
-            case 'subtract': {
-              const [{specificityArray: [, spec]}] = specificity.calculate(edit.outerRule.selectorText);
-              const inside = selectorInside(edit.outerRule.selectorText, {doc, elPath: mountPath});
-              const prefix = `[data-shadow-dom-root="${id}"]${range(spec + 1, `:not(#${noop})`).join('')}`;
-              shieldEl.textContent += `${prefix} ${inside} { ${edit.prop}: ${edit.value}${edit.priority}; }`;
-              // TODO: Find rules that are influenced by this one and rewrite them
-            }
-          }
-
+          const spec = specificityMagnitude(edit.outerRule.selectorText);
+          const inside = selectorInside(edit.outerRule.selectorText, {doc, elPath: mountPath});
+          const prefix = `[data-shadow-dom-root="${id}"]${range(spec + 1, `:not(#${noop})`).join('')}`;
+          shieldEl.textContent += `${prefix} ${inside} { ${edit.prop}: ${edit.value}${edit.priority}; }`;
         });
 
       base.innerHTML = mountBase.innerHTML;

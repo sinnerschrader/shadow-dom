@@ -6,7 +6,7 @@ export function diff(styleNode, mountPath) {
   const actual = styleNode.rules.reduce((acc, rule) => {
     Object.keys(rule.style)
       .forEach(prop => {
-        if (!(prop in acc)) {
+        if (!(prop in acc) || rule.style[prop].priority === 'important') {
           acc[prop] = rule.style[prop];
           acc[prop].rule = rule;
         }
@@ -17,7 +17,7 @@ export function diff(styleNode, mountPath) {
   const expected = inside.reduce((acc, rule) => {
     Object.keys(rule.style)
       .forEach(prop => {
-        if (!(prop in acc)) {
+        if (!(prop in acc) || rule.style[prop].priority === 'important') {
           acc[prop] = rule.style[prop];
           acc[prop].rule = rule;
         }
@@ -43,7 +43,8 @@ export function diff(styleNode, mountPath) {
           prop,
           value: ev,
           priority: (ev.priority || a.priority) === 'important' ? '!important' : '',
-          rule: e.rule
+          rule: e.rule,
+          outerRule: a.rule
         };
       }
 
