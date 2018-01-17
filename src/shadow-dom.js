@@ -63,11 +63,11 @@ function createShadowRoot(el) {
           return acc;
         }, []);
 
-      const spec = outerRules.length > 0
-        ? outerRules.map(o => specificityMagnitude(o.selectorText)).sort((a, b) => a - b)
-        : 0;
+      const spec = (outerRules.length > 0
+        ? outerRules.map(o => specificityMagnitude(o.selectorText)).sort((a, b) => a - b)[0]
+        : 0) + 1;
 
-      interrupt(el, {id, initialFor, noop, spec});
+      interrupt(el, {id, initialFor, noop, spec: spec});
       const shieldEl = el.querySelector(`[data-shadow-dom-initial="${id}"]`);
 
       const escalator = `[data-shadow-dom-root="${id}"]${range(spec, `:not(#${noop})`).join('')}`;
