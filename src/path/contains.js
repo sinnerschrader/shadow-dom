@@ -1,4 +1,4 @@
-export function inPath(path, base) {
+export function contains(path, base) {
   if (!Array.isArray(path)) {
     throw new TypeError(`path must be array of integers, received ${path}`);
   }

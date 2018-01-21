@@ -1,10 +1,10 @@
-export function getPathByElement(element, base) {
+export function fromElement(element, base) {
   if (!element) {
-    throw new TypeError(`get-path-by-element: element must be instance of Node`);
+    throw new TypeError(`from-element: element must be instance of Node`);
   }
 
   if (!base) {
-    throw new TypeError(`get-path-by-element: base must be instance of Node`);
+    throw new TypeError(`from-element: base must be instance of Node`);
   }
 
   let pre = element;

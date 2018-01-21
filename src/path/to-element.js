@@ -1,6 +1,6 @@
-import * as List from './list';
+import * as List from '../list';
 
-export function getElementByPath(path, base) {
+export function toElement(path, base) {
   if (!Array.isArray(path)) {
     throw new TypeError(`path must be array of positive integers, received ${path}`);
   }

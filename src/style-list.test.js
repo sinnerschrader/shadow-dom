@@ -62,44 +62,11 @@ it('matches media query rules as expected', () => {
   }));
 });
 
-it('attaches pseudo elements to hosts', () => {
-  const html = fixture('tree-pseudo-elements');
-  const actual = parse(dom(html));
-
-  expect(actual).toContain(jasmine.objectContaining({
-    tagName: 'DIV',
-    path: [0, 1, 0],
-    before: jasmine.arrayContaining([
-      jasmine.objectContaining({selectorText: 'div::before'})
-    ])
-  }));
-
-  expect(actual).toContain(jasmine.objectContaining({
-    tagName: 'SPAN',
-    path: [0, 1, 1],
-    after: jasmine.arrayContaining([
-      jasmine.objectContaining({selectorText: 'span::after'})
-    ])
-  }));
-});
-
 it('sorts rules descending by specificity', () => {
   const html = fixture('tree-specificity');
   const div = find(parse(dom(html)), i => i.tagName === 'DIV');
   const selectors = div.rules.map(r => r.selectorText);
   expect(selectors).toEqual(['#a', '.a.a', '[data-a]', '.a']);
-});
-
-it('sorts pseudo element rules descending by specificity', () => {
-  const html = fixture('tree-pseudo-element-specificity');
-  const list = parse(dom(html));
-  const div = find(list, i => i.tagName === 'DIV');
-  const span = find(list, i => i.tagName === 'SPAN');
-  const after = div.before.map(r => r.selectorText);
-  const before = span.after.map(r => r.selectorText);
-
-  expect(after).toEqual(['.b.b.b + .a::before', 'div::before']);
-  expect(before).toEqual(['.b.b::after', 'span::after', 'span::after']);
 });
 
 it('honors source order', () => {

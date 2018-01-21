@@ -358,7 +358,7 @@ it('protects from !important rules in media queries > 500px', () => {
   viewport.reset();
 });
 
-it('protects animations from name collisions', () => {
+/* it('protects animations from name collisions', () => {
   const {scope, cleanup} = bootstrap('globals-animation');
 
   if (!HAS_SHADOWDOM) {
@@ -396,7 +396,7 @@ it('protects fonts from name collisions', () => {
   }
 
   cleanup();
-});
+}); */
 
 it('handles invalid css selectors gracefully', () => {
   const {cleanup} = bootstrap('invalid-selectors'); // does not throw

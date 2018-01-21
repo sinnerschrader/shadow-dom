@@ -1,5 +1,5 @@
-import {getPathByElement} from './get-path-by-element';
 import * as List from './list';
+import * as Path from './path';
 
 export function splitRule(rule) {
   return rule.selectorText.split(',')
@@ -16,7 +16,7 @@ function createRule(cssRule, overrides) {
     selectorText: (overrides.selectorText || cssRule.selectorText).trim(),
     type: cssRule.type,
     parentRule: cssRule.parentRule, // TODO: Do not expose entire parentRules, simplify too
-    styleSheetPath: getPathByElement(node, doc),
+    styleSheetPath: Path.fromElement(node, doc),
     rulePath: getPathByRule(cssRule, node.sheet)
   };
 }
@@ -50,7 +50,7 @@ function styleToMap(style) {
   return List.reduce(style, (acc, name) => {
     acc[name] = {
       value: style.getPropertyValue(name),
-      priority: style.getPropertyPriority(name)
+      priority: style.getPropertyPriority(name),
     };
     return acc;
   }, {});

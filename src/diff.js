@@ -1,29 +1,11 @@
-import {inPath} from './in-path';
+import * as Path from './path';
 
 export function diff(styleNode, mountPath) {
-  const inside = styleNode.rules.filter(r => inPath(r.styleSheetPath, mountPath));
+  const inside = styleNode.rules.filter(r => Path.contains(r.styleSheetPath, mountPath));
+  const insideImporant = styleNode.important.filter(d => Path.contains(d.rule.styleSheetPath, mountPath));
 
-  const actual = styleNode.rules.reduce((acc, rule) => {
-    Object.keys(rule.style)
-      .forEach(prop => {
-        if (!(prop in acc) || rule.style[prop].priority === 'important') {
-          acc[prop] = rule.style[prop];
-          acc[prop].rule = rule;
-        }
-      });
-    return acc;
-  }, {});
-
-  const expected = inside.reduce((acc, rule) => {
-    Object.keys(rule.style)
-      .forEach(prop => {
-        if (!(prop in acc) || rule.style[prop].priority === 'important') {
-          acc[prop] = rule.style[prop];
-          acc[prop].rule = rule;
-        }
-      });
-    return acc;
-  }, {});
+  const actual = computeStyles(styleNode.rules, styleNode.important);
+  const expected = computeStyles(inside, insideImporant);
 
   return Object.keys(actual)
     .map(prop => {
@@ -62,3 +44,26 @@ export function diff(styleNode, mountPath) {
     })
     .filter(Boolean);
 }
+
+function computeStyles(rules, importantDeclarations) {
+  const computed = rules.reduce((acc, rule) => {
+    Object.keys(rule.style)
+      .forEach(prop => {
+        const important = importantDeclarations.find(d => d.propName === prop);
+
+        if (important) {
+          acc[prop] = important.rule.style[prop];
+          acc[prop].rule = important.rule;
+        }
+
+        if (!acc.hasOwnProperty(prop)) {
+          acc[prop] = rule.style[prop];
+          acc[prop].rule = rule;
+        }
+      });
+    return acc;
+  }, {});
+
+  return computed;
+}
+

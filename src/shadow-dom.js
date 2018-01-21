@@ -4,13 +4,11 @@ import specificity from 'specificity';
 import {diff} from './diff';
 import {flattenRules} from './flatten-rules';
 import * as List from './list';
+import * as Path from './path';
 import {parseSelector} from './parse-selector';
 import {pushTo} from './push-to';
 import * as styleList from './style-list';
 import {splitRule} from './split-rule';
-import {getElementByPath} from './get-element-by-path';
-import {getPathByElement} from './get-path-by-element';
-import {inPath} from './in-path';
 import {specificityMagnitude} from './specificity-magnitude';
 
 export function shadowDom(el) {  // eslint-disable-line import/prefer-default-export
@@ -48,14 +46,14 @@ function createShadowRoot(el) {
       const serializer = new XMLSerializer();
 
       const doc = parser.parseFromString(getDocElement(el).outerHTML, 'text/html');
-      const mountPath = getPathByElement(el, document);
+      const mountPath = Path.fromElement(el, document);
 
-      const mount = getElementByPath(mountPath, doc);
+      const mount = Path.toElement(mountPath, doc);
       const mountBase = mount.firstChild;
       mountBase.innerHTML = innerHTML;
 
       const outerRules = List.map(doc.styleSheets, s => s.ownerNode)
-        .filter(styleTag => !inPath(getPathByElement(styleTag, doc), mountPath))
+        .filter(styleTag => !Path.contains(Path.fromElement(styleTag, doc), mountPath))
         .reduce((acc, tag) => {
           flattenRules(tag.sheet.cssRules)
             .filter(rule => rule.type === CSSRule.STYLE_RULE)
@@ -72,21 +70,24 @@ function createShadowRoot(el) {
 
       const escalator = `[data-shadow-dom-root="${id}"]${range(spec, `:not(#${noop})`).join('')}`;
 
-      List.filter(doc.styleSheets, sheet => inPath(getPathByElement(sheet.ownerNode, doc), mountPath))
+      List.filter(doc.styleSheets, sheet => Path.contains(Path.fromElement(sheet.ownerNode, doc), mountPath))
         .forEach(sheet => {
           sheet.ownerNode.textContent = List.reduce(sheet.cssRules, (acc, rule) => {
             return `${acc}\n${prefixRule(rule, escalator)}`
           }, '');
         });
 
-      styleList.parse(doc)
-        .filter(n => inPath(n.path, mountPath))
-        .reduce((acc, i) => pushTo(acc, diff(i, mountPath)), [])
+      const innerStyleNodes = styleList.parse(doc).filter(n => Path.contains(n.path, mountPath));
+
+      innerStyleNodes.reduce((acc, i) => pushTo(acc, diff(i, mountPath)), [])
         .forEach(edit => {
           const spec = specificityMagnitude(edit.outerRule.selectorText);
           const inside = selectorInside(edit.outerRule.selectorText, {doc, elPath: mountPath});
           const prefix = `[data-shadow-dom-root="${id}"]${range(spec + 1, `:not(#${noop})`).join('')}`;
           shieldEl.textContent += `${prefix} ${inside} { ${edit.prop}: ${edit.value}${edit.priority}; }`;
+
+          // TODO: get all rules that might be affected by this edit (+!important, higher specificity)
+          // const affected = getAffected(innerStyleNodes, edit.rule);
         });
 
       base.innerHTML = mountBase.innerHTML;
@@ -314,6 +315,7 @@ function getGroupingCondition(rule, keyword) {
 function selectorInside(selector, {doc, elPath}) {
   const selectors = parseSelector(selector)
     .reverse()
+    .filter(node => node.type !== 'pseudo')
     .map((node, index, nodes) => nodes.slice(index).reverse().map(n => String(n)).join(''))
     .filter(selector => {
       const trimmed = selector.trim();
@@ -341,5 +343,5 @@ function selectorOutside(selector, {doc, elPath}) {
 }
 
 function containsMatching(selector, {doc, elPath}) {
-  return List.some(doc.querySelectorAll(selector), e => inPath(getPathByElement(e, doc), elPath));
+  return List.some(doc.querySelectorAll(selector), e => Path.contains(Path.fromElement(e, doc), elPath));
 }
