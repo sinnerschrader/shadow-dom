@@ -7,16 +7,14 @@
   "scripts": {
     "build": "npm run pack && npm run babel",
     "pack": "webpack",
-    "babel": "babel src -d lib",
+    "babel": "babel src -d lib --ignore src/**/*.test.js",
     "lint": "xo",
     "test": "karma start karma.js"
   },
   "babel": {
-    "ignore": [
-      "src/**/*.test.js"
-    ],
     "plugins": [
-      "transform-object-assign"
+      "transform-object-assign",
+      "transform-es2015-arrow-functions"
     ],
     "presets": [
       [
@@ -25,7 +23,7 @@
           "targets": {
             "browsers": [
               "last 2 versions",
-              "ie >= 11"
+              "ie >= 10"
             ]
           }
         }
