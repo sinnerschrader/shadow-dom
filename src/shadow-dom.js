@@ -4,6 +4,7 @@ import specificity from 'specificity';
 import {diff} from './diff';
 import {elementMayMatch} from './element-may-match';
 import {flattenRules} from './flatten-rules';
+import {getAll} from './get-all';
 import {getSelectorInside} from './get-selector-inside';
 import * as List from './list';
 import * as Path from './path';
