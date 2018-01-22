@@ -358,46 +358,6 @@ it('protects from !important rules in media queries > 500px', () => {
   viewport.reset();
 });
 
-/* it('protects animations from name collisions', () => {
-  const {scope, cleanup} = bootstrap('globals-animation');
-
-  if (!HAS_SHADOWDOM) {
-    const ctx = document.querySelector('[data-test-name="globals-animation"]');
-    const outer = document.querySelector('[data-test-name="globals-animation"] .a');
-    const inner = scope.shadowRoot.querySelector('.b');
-
-    const outerAnimationName = window.getComputedStyle(outer).getPropertyValue('animation-name');
-    const innerAnimationName = window.getComputedStyle(inner).getPropertyValue('animation-name');
-
-    const [outerAnimation] = getKeyFrames(outerAnimationName, ctx);
-    const [innerAnimation] = getKeyFrames(innerAnimationName, ctx);
-
-    expect(outerAnimationName).toBe('a');
-    expect(innerAnimationName).not.toBe('a');
-    expect(outerAnimation.style.getPropertyValue('color')).toBe('red');
-    expect(innerAnimation.style.getPropertyValue('color')).toBe('green');
-  }
-
-  cleanup();
-});
-
-it('protects fonts from name collisions', () => {
-  const {scope, cleanup} = bootstrap('globals-fontface');
-
-  if (!HAS_SHADOWDOM) {
-    const outer = document.querySelector('.a');
-    const inner = scope.shadowRoot.querySelector('.b');
-
-    const outerFontList = getFontList(outer);
-    const innerFontList = getFontList(inner);
-
-    expect(outerFontList).toContain('a');
-    expect(innerFontList).not.toContain('a');
-  }
-
-  cleanup();
-}); */
-
 it('handles invalid css selectors gracefully', () => {
   const {cleanup} = bootstrap('invalid-selectors'); // does not throw
   cleanup();

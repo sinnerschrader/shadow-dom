@@ -2,7 +2,9 @@ import shortid from 'shortid';
 import specificity from 'specificity';
 
 import {diff} from './diff';
+import {elementMayMatch} from './element-may-match';
 import {flattenRules} from './flatten-rules';
+import {getSelectorInside} from './get-selector-inside';
 import * as List from './list';
 import * as Path from './path';
 import {parseSelector} from './parse-selector';
@@ -23,7 +25,7 @@ export function shadowDom(el) {  // eslint-disable-line import/prefer-default-ex
 
   return {
     get shadowRoot() {
-      return shadowRoot;
+      return shadowRoot;s
     }
   };
 }
@@ -79,17 +81,21 @@ function createShadowRoot(el) {
 
       const innerStyleNodes = styleList.parse(doc).filter(n => Path.contains(n.path, mountPath));
 
-      innerStyleNodes.reduce((acc, i) => pushTo(acc, diff(i, mountPath)), [])
-        .forEach(edit => {
-          const spec = specificityMagnitude(edit.outerRule.selectorText);
-          const inside = selectorInside(edit.outerRule.selectorText, {doc, elPath: mountPath});
-          const prefix = `[data-shadow-dom-root="${id}"]${range(spec + 1, `:not(#${noop})`).join('')}`;
-          shieldEl.textContent += `${prefix} ${inside} { ${edit.prop}: ${edit.value}${edit.priority}; }`;
+      const visitedRules = [];
 
-          // TODO: get all rules that might be affected by this edit (+!important, higher specificity)
-          // const affected = getAffected(innerStyleNodes, edit.rule);
-        });
+      const addition = innerStyleNodes.reduce((acc, i) => pushTo(acc, diff(i, {escalator, mountPath})), [])
+        .reduce((acc, edit) => {
+          visitedRules.push(edit.rule);
+          acc.push(edit);
+          pushTo(acc, findAffectedRules(edit, {doc, escalator, mountPath, nodes: innerStyleNodes, visitedRules}));
+          return acc;
+        }, [])
+        .reduce((text, edit) => {
+          text += renderEdit(edit, {noop, doc, id, mountPath});
+          return text;
+        }, '');
 
+      shieldEl.textContent += addition;
       base.innerHTML = mountBase.innerHTML;
     },
     get innerHTML() {
@@ -101,6 +107,52 @@ function createShadowRoot(el) {
       return base.toString();
     }
   };
+}
+
+function findAffectedRules(edit, ctx) {
+  const {doc, escalator, nodes, mountPath, visitedRules} = ctx;
+
+  return nodes
+    .filter(node => elementMayMatch(Path.toElement(node.path, doc), edit.selectorText))
+    .reduce((acc, node) => {
+      node.rules
+        .filter(rule => Path.contains(rule.styleSheetPath, mountPath))
+        .forEach(rule => {
+          const nv = rule.style[edit.prop];
+
+          if (typeof nv === 'undefined') {
+            return;
+          }
+
+          if (visitedRules.indexOf(rule) > -1) {
+            return;
+          }
+
+          visitedRules.push(rule);
+
+          acc.push({
+            type: 'add',
+            prop: edit.prop,
+            value: nv.value,
+            priority: '!important',
+            rule,
+            selectorText: rule.selectorText.replace(escalator, ''),
+            outerRule: edit.outerRule
+          });
+
+          findAffectedRules(rule, ctx);
+        });
+
+      return acc;
+    }, []);
+}
+
+function renderEdit(edit, {noop, id, doc, mountPath}) {
+  const spec = specificityMagnitude(edit.outerRule.selectorText);
+  const prefix = `[data-shadow-dom-root="${id}"]${range(spec + 1, `:not(#${noop})`).join('')}`;
+  const inside = getSelectorInside(edit.selectorText, {doc, elPath: mountPath});
+  const selector = `${prefix} ${inside}`;
+  return wrapWithParents(`${selector} { ${edit.prop}: ${edit.value}${edit.priority}; }`, edit.rule)
 }
 
 function prefixRule(rule, prefix) {
@@ -310,38 +362,4 @@ function getGroupingCondition(rule, keyword) {
   }
 
   return result[1].trim();
-}
-
-function selectorInside(selector, {doc, elPath}) {
-  const selectors = parseSelector(selector)
-    .reverse()
-    .filter(node => node.type !== 'pseudo')
-    .map((node, index, nodes) => nodes.slice(index).reverse().map(n => String(n)).join(''))
-    .filter(selector => {
-      const trimmed = selector.trim();
-      const last = trimmed[trimmed.length - 1];
-      return last !== '~' && last !== '+' && last !== '>';
-    });
-
-  const index = selectors.findIndex(s => !containsMatching(s, {doc, elPath}));
-  const nonMatch = selectors[index];
-
-  const regex = new RegExp(`^${nonMatch}`);
-  const result = selector.replace(regex, '');
-
-  if (!result) {
-    return selector;
-  }
-
-  return result;
-}
-
-function selectorOutside(selector, {doc, elPath}) {
-  const inside = selectorInside(selector, {doc, elPath});
-  const head = selector.substring(0, selector.indexOf(inside));
-  return head;
-}
-
-function containsMatching(selector, {doc, elPath}) {
-  return List.some(doc.querySelectorAll(selector), e => Path.contains(Path.fromElement(e, doc), elPath));
 }

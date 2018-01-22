@@ -1,6 +1,6 @@
 import specificity from 'specificity';
 
-import {elementMatches} from './element-matches';
+import {elementMayMatch} from './element-may-match';
 import {flattenRules} from './flatten-rules';
 import * as List from './list';
 import * as Path from './path';
@@ -9,23 +9,6 @@ import {pushTo} from './push-to';
 import {splitRule} from './split-rule';
 
 const DEFAULT_DOC = '<html><head></head><body></body></html>';
-
-const SELECTING_PSEUDOS = [
-  ':first',
-  ':first-child',
-  ':first-of-type',
-  ':last-child',
-  ':last-of-type',
-  ':not',
-  ':nth-child',
-  ':nth-last-child',
-  ':nth-last-of-type',
-  ':nth-of-type',
-  ':only-child',
-  ':only-of-type',
-  ':root',
-  ':scope'
-];
 
 export function parse(doc) {
   const allRules = List
@@ -57,19 +40,6 @@ export function parse(doc) {
       })
     };
   });
-}
-
-function elementMayMatch(node, selectorText) {
-  if (elementMatches(node, selectorText)) {
-    return true;
-  }
-
-  // strip pseudo classes from selector to check if it may match
-  const selectorNodes = parseSelector(selectorText)
-    .filter(node => node.type !== 'pseudo' || SELECTING_PSEUDOS.indexOf(node.value) > -1);
-
-  const baseSelectorText = selectorNodes.map(selectorNode => String(selectorNode)).join('');
-  return elementMatches(node, baseSelectorText);
 }
 
 function getImportantDeclarations(rules) {

@@ -1,48 +1,54 @@
 import * as Path from './path';
+import {pushTo} from './push-to';
 
-export function diff(styleNode, mountPath) {
+export function diff(styleNode, {mountPath, escalator}) {
   const inside = styleNode.rules.filter(r => Path.contains(r.styleSheetPath, mountPath));
-  const insideImporant = styleNode.important.filter(d => Path.contains(d.rule.styleSheetPath, mountPath));
+  const insideImportant = styleNode.important.filter(d => Path.contains(d.rule.styleSheetPath, mountPath));
 
   const actual = computeStyles(styleNode.rules, styleNode.important);
-  const expected = computeStyles(inside, insideImporant);
+  const expected = computeStyles(inside, insideImportant);
 
   return Object.keys(actual)
-    .map(prop => {
+    .reduce((acc, prop) => {
       const a = actual[prop];
       const e = expected[prop];
       const av = a ? a.value : null;
       const ev = e ? e.value : null;
 
       if (av === ev) {
-        return null;
+        return acc;
       }
 
       // outer styles overrides local style illegally
       if (ev) {
-        return {
+        const prio = (e.priority || a.priority) === 'important';
+
+        acc.push({
           type: 'add',
           prop,
           value: ev,
-          priority: (ev.priority || a.priority) === 'important' ? '!important' : '',
+          priority: prio ? '!important' : '',
           rule: e.rule,
-          outerRule: a.rule
-        };
+          outerRule: a.rule,
+          selectorText: e.rule.selectorText.replace(escalator, '')
+        });
       }
 
       // outer style adds new prop illegally
-      if (av) {
-        return {
+      if (av && !ev) {
+        acc.push({
           type: 'subtract',
           prop,
           value: 'initial',
           priority: a.priority === 'important' ? '!important' : '',
-          rule: inside[0],
+          rule: a.rule,
+          selectorText: a.rule.selectorText,
           outerRule: a.rule
-        };
+        });
       }
-    })
-    .filter(Boolean);
+
+      return acc;
+    }, []);
 }
 
 function computeStyles(rules, importantDeclarations) {
