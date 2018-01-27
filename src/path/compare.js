@@ -1,7 +1,8 @@
 export function compare(a, b) {
   for (let i = 0; i < a.length; i += 1) {
-    const ai = a[i];
-    const bi = b[i];
+    const ai = co(a[i]);
+    const bi = co(b[i]);
+
     if (ai === bi) {
       continue;
     }
@@ -14,4 +15,8 @@ export function compare(a, b) {
   }
 
   return 0;
+}
+
+function co(candidate) {
+  return typeof candidate === 'undefined' ? -1 : candidate;
 }

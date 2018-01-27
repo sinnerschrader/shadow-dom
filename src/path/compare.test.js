@@ -33,6 +33,10 @@ it('returns -1 for contained paths', () => {
 });
 
 it('returns -1 for longer contained paths', () => {
+  expect(compare([0, 1, 20, 0, 1, 0, 1], [0, 1, 20, 0, 1])).not.toEqual(0);
+});
+
+it('returns -1 for longer contained paths', () => {
   expect(compare([1, 2, 1], [1, 1])).toEqual(-1);
 });
 
