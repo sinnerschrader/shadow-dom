@@ -1,5 +1,6 @@
 const os = require('os');
 const meow = require('meow');
+
 const cli = meow();
 
 process.env.CHROME_BIN = require('puppeteer').executablePath();

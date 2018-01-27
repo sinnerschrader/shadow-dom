@@ -45,7 +45,7 @@ it('strips media queries', () => {
 
   expect(actual).not.toContain(jasmine.objectContaining({
     type: CSSRule.MEDIA_RULE
-  }))
+  }));
 });
 
 it('unwraps support queries', () => {
@@ -73,7 +73,7 @@ it('strips supports queries', () => {
 
   expect(actual).not.toContain(jasmine.objectContaining({
     type: CSSRule.SUPPORTS_RULE
-  }))
+  }));
 });
 
 it('unwraps nested queries', () => {

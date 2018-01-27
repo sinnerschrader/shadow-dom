@@ -1,5 +1,6 @@
 const env = require('dotenv');
 const meow = require('meow');
+
 const cli = meow();
 
 env.config();
@@ -103,6 +104,6 @@ module.exports = config => {
         os_version: '10'
       }
     },
-    browsers: browsers
+    browsers
   });
 };

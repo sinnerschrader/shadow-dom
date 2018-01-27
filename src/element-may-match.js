@@ -23,7 +23,7 @@ export function elementMayMatch(node, selectorText) {
     return true;
   }
 
-  // strip pseudo classes from selector to check if it may match
+  // Strip pseudo classes from selector to check if it may match.
   const selectorNodes = parseSelector(selectorText)
     .filter(node => node.type !== 'pseudo' || SELECTING_PSEUDOS.indexOf(node.value) > -1);
 

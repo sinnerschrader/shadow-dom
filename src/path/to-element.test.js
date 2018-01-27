@@ -1,5 +1,5 @@
-import {toElement} from './to-element';
 import {dom} from '../utils.test';
+import {toElement} from './to-element';
 
 it('throws for missing path', () => {
   expect(() => toElement()).toThrowError(/path must be array of positive integers/);

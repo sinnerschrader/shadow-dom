@@ -1,6 +1,5 @@
 import find from 'lodash.find';
 import * as Path from './path';
-import {pushTo} from './push-to';
 
 export function diff(styleNode, {mountPath, escalator}) {
   const inside = styleNode.rules.filter(r => Path.contains(r.styleSheetPath, mountPath));
@@ -20,7 +19,7 @@ export function diff(styleNode, {mountPath, escalator}) {
         return acc;
       }
 
-      // outer styles overrides local style illegally
+      // Outer styles overrides local style illegally.
       if (ev) {
         const prio = (e.priority || a.priority) === 'important';
 
@@ -35,7 +34,7 @@ export function diff(styleNode, {mountPath, escalator}) {
         });
       }
 
-      // outer style adds new prop illegally
+      // Outer style adds new prop illegally.
       if (av && !ev) {
         acc.push({
           type: 'subtract',
@@ -63,7 +62,7 @@ function computeStyles(rules, importantDeclarations) {
           acc[prop].rule = important.rule;
         }
 
-        if (!acc.hasOwnProperty(prop)) {
+        if (!Object.prototype.hasOwnProperty.call(acc, prop)) {
           acc[prop] = rule.style[prop];
           acc[prop].rule = rule;
         }

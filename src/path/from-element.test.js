@@ -1,5 +1,5 @@
-import {fromElement} from './from-element';
 import {dom} from '../utils.test';
+import {fromElement} from './from-element';
 
 it('throws for missing element', () => {
   expect(() => fromElement()).toThrowError(/element must be instance of Node/);

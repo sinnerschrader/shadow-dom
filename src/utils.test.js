@@ -52,7 +52,7 @@ export function setup(html, options) {
 
   const cleanup = () => {
     document.body.removeChild(el);
-  }
+  };
 
   const innerHTML = shadowElement.innerHTML;
   const scope = shadowDom(shadowElement);

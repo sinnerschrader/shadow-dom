@@ -40,7 +40,16 @@
       "camelcase": [
         0
       ],
+      "comma-dangle": [
+        0
+      ],
+      "operator-linebreak": [
+        0
+      ],
       "import/no-unassigned-import": [
+        0
+      ],
+      "import/prefer-default-export": [
         0
       ],
       "unicorn/no-process-exit": [
@@ -93,6 +102,7 @@
     "xo": "^0.18.2"
   },
   "dependencies": {
+    "babel-core": "6",
     "lodash.every": "^4.6.0",
     "lodash.findindex": "^4.6.0",
     "lodash.partition": "^4.6.0",

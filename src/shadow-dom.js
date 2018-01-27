@@ -1,5 +1,4 @@
 import shortid from 'shortid';
-import specificity from 'specificity';
 
 import {diff} from './diff';
 import {elementMayMatch} from './element-may-match';
@@ -8,7 +7,6 @@ import {getAll} from './get-all';
 import {getSelectorInside} from './get-selector-inside';
 import * as List from './list';
 import * as Path from './path';
-import {parseSelector} from './parse-selector';
 import {pushTo} from './push-to';
 import * as styleList from './style-list';
 import {splitRule} from './split-rule';
@@ -26,7 +24,7 @@ export function shadowDom(el) {  // eslint-disable-line import/prefer-default-ex
 
   return {
     get shadowRoot() {
-      return shadowRoot;s
+      return shadowRoot;
     }
   };
 }
@@ -37,16 +35,13 @@ function createShadowRoot(el) {
   const noop = shortid.generate();
   const initialFor = getValue();
 
-  {
-    el.innerHTML = '';
-    base.setAttribute('data-shadow-dom-root', id);
-    el.appendChild(base);
-  }
+  el.innerHTML = '';
+  base.setAttribute('data-shadow-dom-root', id);
+  el.appendChild(base);
 
   return {
     set innerHTML(innerHTML) {
       const parser = new DOMParser();
-      const serializer = new XMLSerializer();
 
       const doc = parser.parseFromString(getDocElement(el).outerHTML, 'text/html');
       const mountPath = Path.fromElement(el, document);
@@ -68,7 +63,7 @@ function createShadowRoot(el) {
         ? outerRules.map(o => specificityMagnitude(o.selectorText)).sort((a, b) => a - b)[0]
         : 0) + 1;
 
-      interrupt(el, {id, initialFor, noop, spec: spec});
+      interrupt(el, {id, initialFor, noop, spec});
       const shieldEl = el.querySelector(`[data-shadow-dom-initial="${id}"]`);
 
       const escalator = `[data-shadow-dom-root="${id}"]${range(spec, `:not(#${noop})`).join('')}`;
@@ -76,7 +71,7 @@ function createShadowRoot(el) {
       List.filter(doc.styleSheets, sheet => Path.contains(Path.fromElement(sheet.ownerNode, doc), mountPath))
         .forEach(sheet => {
           sheet.ownerNode.textContent = List.reduce(sheet.cssRules, (acc, rule) => {
-            return `${acc}\n${prefixRule(rule, escalator)}`
+            return `${acc}\n${prefixRule(rule, escalator)}`;
           }, '');
         });
 
@@ -153,7 +148,7 @@ function renderEdit(edit, {noop, id, doc, mountPath}) {
   const prefix = `[data-shadow-dom-root="${id}"]${range(spec + 1, `:not(#${noop})`).join('')}`;
   const inside = getSelectorInside(edit.selectorText, {doc, elPath: mountPath});
   const selector = `${prefix} ${inside}`;
-  return wrapWithParents(`${selector} { ${edit.prop}: ${edit.value}${edit.priority}; }`, edit.rule)
+  return wrapWithParents(`${selector} { ${edit.prop}: ${edit.value}${edit.priority}; }`, edit.rule);
 }
 
 function prefixRule(rule, prefix) {
@@ -164,30 +159,16 @@ function prefixRule(rule, prefix) {
       return `@media ${getGroupingCondition(rule, 'media')} { ${List.map(rule.cssRules, r => prefixRule(r, prefix)).join('\n')} }`;
     case CSSRule.SUPPORTS_RULE:
       return `@supports ${getGroupingCondition(rule, 'supports')} { ${List.map(rule.cssRules, r => prefixRule(r, prefix)).join('\n')} }`;
+    default:
+      throw new Error(`Unknown type "${rule.type}" in "${JSON.stringify(rule)}"`);
   }
 }
 
 function emitStyle(style) {
-  return List.map(style, (prop) => {
+  return List.map(style, prop => {
     const prio = style.getPropertyPriority(prop) ? '!important' : '';
     return `${prop}: ${style.getPropertyValue(prop)}${prio};`;
   }).join('\n');
-}
-
-function isSamePath(a, b) {
-  return a.length === b.length && List.every(a, (i, j) => b[j] === i);
-}
-
-function getRuleIndex(rule) {
-  const p = rule.parentRule || rule.parentStyleSheet;
-
-  for (let i = 0; i < p.cssRules.length; i++) {
-    if (p.cssRules[i] === rule) {
-      return i;
-    }
-  }
-
-  return -1;
 }
 
 function interrupt(el, {id, initialFor, noop, spec}) {
@@ -223,18 +204,8 @@ function interrupt(el, {id, initialFor, noop, spec}) {
   el.insertBefore(style, el.firstChild);
 }
 
-function getRuleByPath(path, sheet) {
-  return path.reduce((rule, index) => {
-    if (rule === null) {
-      return rule;
-    }
-
-    return rule.cssRules[index] || null;
-  }, sheet);
-}
-
 function getDoc(el) {
-  while(el.parentNode) {
+  while (el.parentNode) {
     el = el.parentNode;
   }
   return el;

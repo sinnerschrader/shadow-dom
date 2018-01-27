@@ -1,4 +1,5 @@
 const meow = require('meow');
+
 const cli = meow();
 
 module.exports = config => {
@@ -17,7 +18,7 @@ module.exports = config => {
 
   if (process.env.TRAVIS_SECURE_ENV_VARS === 'true') {
     return require('./karma.remote.js')(config);
-  } else {
-    return require('./karma.local.js')(config);
   }
-}
+
+  return require('./karma.local.js')(config);
+};

@@ -4,11 +4,8 @@ import {elementMayMatch} from './element-may-match';
 import {flattenRules} from './flatten-rules';
 import * as List from './list';
 import * as Path from './path';
-import {parseSelector} from './parse-selector';
 import {pushTo} from './push-to';
 import {splitRule} from './split-rule';
-
-const DEFAULT_DOC = '<html><head></head><body></body></html>';
 
 export function parse(doc) {
   const allRules = List
@@ -17,14 +14,14 @@ export function parse(doc) {
     .reduce((acc, rule) => pushTo(acc, splitRule(rule)), [])
     .sort((a, b) => specificity.compare(a.selectorText, b.selectorText) * -1);
 
-  return List.map(doc.querySelectorAll('*'), (node) => {
+  return List.map(doc.querySelectorAll('*'), node => {
     const rules = allRules.filter(rule => elementMayMatch(node, rule.selectorText));
     const important = getImportantDeclarations(rules);
 
     return {
       tagName: node.tagName,
       path: Path.fromElement(node, doc),
-      rules: rules.filter(r => !List.some(important, (i => r.rule === r))),
+      rules: rules.filter(r => !List.some(important, () => r.rule === r)),
       important: important.sort((a, b) => {
         const spd = Path.compare(a.rule.styleSheetPath, b.rule.styleSheetPath) * -1;
         if (spd !== 0) {
@@ -46,12 +43,12 @@ function getImportantDeclarations(rules) {
   return rules.reduce((acc, rule) => {
     Object.keys(rule.style)
       .filter(propName => rule.style[propName].priority === 'important')
-      .map(propName => {
+      .forEach(propName => {
         acc.push({
-          propName: propName,
+          propName,
           rule
         });
       });
     return acc;
-  }, [])
+  }, []);
 }

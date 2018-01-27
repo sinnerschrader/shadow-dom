@@ -1,3 +1,4 @@
+const path = require('path');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 module.exports = {
@@ -17,7 +18,7 @@ module.exports = {
   output: {
     filename: 'shadow-dom.bundle.js',
     libraryTarget: 'commonjs2',
-    path: __dirname + '/lib'
+    path: path.join(__dirname, '/lib')
   },
   plugins: [
     new UglifyJsPlugin()

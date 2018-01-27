@@ -1,6 +1,6 @@
 /* global it, expect, viewport */
+import {bootstrap, setup} from './utils.test';
 import {shadowDom} from './shadow-dom';
-import {bootstrap, getFontList, getKeyFrames, setup} from './utils.test.js';
 
 const HAS_SHADOWDOM = ('attachShadow' in document.createElement('div'));
 
@@ -50,8 +50,8 @@ it('enforces basic scoping for pseudo elements', () => {
     const before = window.getComputedStyle(a, ':before').getPropertyValue('height');
     const after = window.getComputedStyle(a, ':after').getPropertyValue('height');
 
-    expect(['0px', 'auto']).toContain(before); // signals being not visible
-    expect(['0px', 'auto']).toContain(after); // signals being not visible
+    expect(['0px', 'auto']).toContain(before);
+    expect(['0px', 'auto']).toContain(after);
   }
 
   cleanup();
@@ -359,7 +359,7 @@ it('protects from !important rules in media queries > 500px', () => {
 });
 
 it('handles invalid css selectors gracefully', () => {
-  const {cleanup} = bootstrap('invalid-selectors'); // does not throw
+  const {cleanup} = bootstrap('invalid-selectors');
   cleanup();
 });
 
@@ -367,7 +367,6 @@ it('encapsulates against selectors matching mount point', () => {
   const {scope, cleanup} = bootstrap('mount-selector');
 
   if (!HAS_SHADOWDOM) {
-    const outer = document.querySelector('[data-test-name="mount-selector"] .a');
     const inner = scope.shadowRoot.querySelector('.b');
     const innerColor = window.getComputedStyle(inner).getPropertyValue('color');
     expect(innerColor).toBe('rgb(0, 128, 0)');
@@ -377,7 +376,7 @@ it('encapsulates against selectors matching mount point', () => {
 });
 
 it('protects default-hidden elements against revealing styles', () => {
-  const {scope, cleanup} = bootstrap('hidden-elements');
+  const {cleanup} = bootstrap('hidden-elements');
 
   if (!HAS_SHADOWDOM) {
     const inner = Array.prototype.slice.call(document.querySelectorAll('[data-testname="hidden-elements"] .shadow-dom style, [data-testname="hidden-elements"] .shadow-dom script'), 0);

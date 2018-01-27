@@ -21,7 +21,7 @@ function createRule(cssRule, overrides) {
   };
 }
 
-function getPathByRule(cssRule, sheet) {
+function getPathByRule(cssRule) {
   let current = cssRule;
 
   const path = [];
