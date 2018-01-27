@@ -6,20 +6,6 @@ it('works for empty string', () => {
   expect(() => parse(dom(''))).not.toThrowError();
 });
 
-it('creates doc for empty string', () => {
-  const actual = parse(dom(''));
-  expect(actual).toContain(jasmine.objectContaining({tagName: 'HTML', path: [0]}));
-  expect(actual).toContain(jasmine.objectContaining({tagName: 'HEAD', path: [0, 0]}));
-  expect(actual).toContain(jasmine.objectContaining({tagName: 'BODY', path: [0, 1]}));
-});
-
-it('creates doc with expected elements', () => {
-  const html = fixture('tree-basic');
-  const actual = parse(dom(html));
-  expect(actual).toContain(jasmine.objectContaining({tagName: 'DIV', path: [0, 1, 0]}));
-  expect(actual).toContain(jasmine.objectContaining({tagName: 'SPAN', path: [0, 1, 1]}));
-});
-
 it('matches basic rules as expected', () => {
   const html = fixture('tree-basic-rules');
   const actual = parse(dom(html));
