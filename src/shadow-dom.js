@@ -44,9 +44,11 @@ function createShadowRoot(el) {
       const parser = new DOMParser();
 
       const doc = parser.parseFromString(getDocElement(el).outerHTML, 'text/html');
-      const mountPath = Path.fromElement(el, document);
 
-      const mount = Path.toElement(mountPath, doc);
+      const elPath = Path.fromElement(el, document);
+      const mountPath = Path.fromElement(base, document);
+
+      const mount = Path.toElement(elPath, doc);
       const mountBase = mount.firstChild;
       mountBase.innerHTML = innerHTML;
 
@@ -79,7 +81,7 @@ function createShadowRoot(el) {
 
       const visitedRules = [];
 
-      const addition = innerStyleNodes.reduce((acc, i) => pushTo(acc, diff(i, {escalator, mountPath})), [])
+      const addition = innerStyleNodes.reduce((acc, i) => pushTo(acc, diff(i, {mountPath})), [])
         .reduce((acc, edit) => {
           visitedRules.push(edit.rule);
           acc.push(edit);

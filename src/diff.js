@@ -1,7 +1,7 @@
 import find from 'lodash.find';
 import * as Path from './path';
 
-export function diff(styleNode, {mountPath, escalator}) {
+export function diff(styleNode, {mountPath}) {
   const inside = styleNode.rules.filter(r => Path.contains(r.styleSheetPath, mountPath));
   const insideImportant = styleNode.important.filter(d => Path.contains(d.rule.styleSheetPath, mountPath));
 
@@ -30,7 +30,7 @@ export function diff(styleNode, {mountPath, escalator}) {
           priority: prio ? '!important' : '',
           rule: e.rule,
           outerRule: a.rule,
-          selectorText: e.rule.selectorText.replace(escalator, '')
+          selectorText: e.rule.selectorText
         });
       }
 
