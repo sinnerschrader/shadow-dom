@@ -24,7 +24,7 @@ export function parse(doc) {
     return {
       tagName: node.tagName,
       path: Path.fromElement(node, doc),
-      rules: rules.filter(r => !important.some(i => r.rule === r)),
+      rules: rules.filter(r => !List.some(important, (i => r.rule === r))),
       important: important.sort((a, b) => {
         const spd = Path.compare(a.rule.styleSheetPath, b.rule.styleSheetPath) * -1;
         if (spd !== 0) {

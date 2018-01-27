@@ -1,3 +1,5 @@
+import findIndex from 'lodash.findindex';
+
 import * as List from './list';
 import * as Path from './path';
 import {parseSelector} from './parse-selector';
@@ -13,7 +15,7 @@ export function getSelectorInside(selector, {doc, elPath}) {
       return last !== '~' && last !== '+' && last !== '>';
     });
 
-  const index = selectors.findIndex(s => !containsMatching(s, {doc, elPath}));
+  const index = findIndex(selectors, (s => !containsMatching(s, {doc, elPath})));
   const nonMatch = selectors[index];
 
   const regex = new RegExp(`^${nonMatch}`);

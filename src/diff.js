@@ -1,3 +1,4 @@
+import find from 'lodash.find';
 import * as Path from './path';
 import {pushTo} from './push-to';
 
@@ -55,7 +56,7 @@ function computeStyles(rules, importantDeclarations) {
   const computed = rules.reduce((acc, rule) => {
     Object.keys(rule.style)
       .forEach(prop => {
-        const important = importantDeclarations.find(d => d.propName === prop);
+        const important = find(importantDeclarations, d => d.propName === prop);
 
         if (important) {
           acc[prop] = important.rule.style[prop];

@@ -1,3 +1,5 @@
+import * as List from '../list';
+
 export function contains(path, base) {
   if (!Array.isArray(path)) {
     throw new TypeError(`path must be array of integers, received ${path}`);
@@ -7,5 +9,5 @@ export function contains(path, base) {
     throw new TypeError(`base must be array of integers, received ${base}`);
   }
 
-  return base.every((n, i) => path[i] === n);
+  return List.every(base, (n, i) => path[i] === n);
 }

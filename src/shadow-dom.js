@@ -175,7 +175,7 @@ function emitStyle(style) {
 }
 
 function isSamePath(a, b) {
-  return a.length === b.length && a.every((i, j) => b[j] === i);
+  return a.length === b.length && List.every(a, (i, j) => b[j] === i);
 }
 
 function getRuleIndex(rule) {
