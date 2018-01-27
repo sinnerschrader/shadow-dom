@@ -189,17 +189,17 @@ function interrupt(el, {id, initialFor, noop, spec}) {
   // automated test runs, which does not happen for explicit values
   style.textContent = `
     [data-shadow-dom-root="${id}"]${escalator} {
-      ${props.map(prop => `${prop}: ${initialFor(prop)};`).join('\n')}
+      ${props.map(prop => `${prop}: ${initialFor(prop)};`).join('')}
     }
 
     [data-shadow-dom-root="${id}"]${escalator} ::before {
-      ${props.map(prop => `${prop}: ${initialFor(prop)};`).join('\n')}
+      ${props.map(prop => `${prop}: ${initialFor(prop)};`).join('')}
     }
 
     [data-shadow-dom-root="${id}"]${escalator} ::after {
-      ${props.map(prop => `${prop}: ${initialFor(prop)};`).join('\n')}
+      ${props.map(prop => `${prop}: ${initialFor(prop)};`).join('')}
     }
-  `;
+  `.split('\n').join('');
 
   el.insertBefore(style, el.firstChild);
 }
