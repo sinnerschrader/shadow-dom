@@ -11,6 +11,23 @@
 * 📦 encapsulation: protect against css bleeding
 * 👩‍💻 supports responsive design  
 
+## Installation
+
+```
+npm install --save shadow-dom
+```
+
+## Usage
+
+```js
+const {shadowDom} = require('shadow-dom');
+
+const el = document.querySelector('[data-protected]');
+const protected = shadowDom(el);
+
+protected.shadowRoot.innerHTML = '<p>This is protected against outer styles</p>';
+```
+
 ## Development
 
 ```
