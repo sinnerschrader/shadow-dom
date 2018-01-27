@@ -1,25 +1,33 @@
 const os = require('os');
+const globby = require('globby');
 const meow = require('meow');
 
 const cli = meow();
+const has = name => hasFlag(cli, name);
 
 process.env.CHROME_BIN = require('puppeteer').executablePath();
 
 module.exports = config => {
-  const indicated = 'chrome' in cli.flags ||
-    'safari' in cli.flags ||
-    'firefox' in cli.flags ||
-    'ie' in cli.flags;
+  const indicated = has('chrome') || has('safari') || has('firefox') || has('ie');
+  const pattern = Array.isArray(cli.flags.pattern) ? cli.flags.pattern : [cli.flags.pattern];
 
-  const pattern = 'pattern' in cli.flags ? `src/**/${cli.flags.pattern}` : 'src/**/*.test.js';
+  const ps = pattern.map(p => `src/**/${p}`);
+
+  const files = has('pattern')
+    ? globby.sync(ps)
+    : [{pattern: 'src/**/*.test.js', watched: false}];
+
+  if (has('pattern')) {
+    console.log('Pattern:', ps.join(', '));
+    console.log('Matched:', files.join(', '));
+  }
 
   config.set({
     basePath: '',
     frameworks: ['jasmine', 'viewport'],
-    files: [
-      {pattern, watched: false},
-      {pattern: './fixtures/*', included: false, served: true}
-    ],
+    files: files.concat([
+      {pattern: './fixtures/*', included: false, served: true},
+    ]),
     preprocessors: {
       'src/**/*.js': ['webpack']
     },
@@ -93,3 +101,7 @@ module.exports = config => {
     .map(browser => browser.name)
   });
 };
+
+function hasFlag(cli, name) {
+  return Object.prototype.hasOwnProperty.call(cli.flags, name);
+}
