@@ -36,20 +36,31 @@ function createShadowRoot(el) {
   const initialFor = getValue();
 
   el.innerHTML = '';
+
+  const shieldEl = document.createElement('style');
+  shieldEl.setAttribute('data-shadow-dom-initial', id);
+  shieldEl.setAttribute('data-shadow-dom', true);
+
+  const adaptEl = document.createElement('style');
+  adaptEl.setAttribute('data-shadow-dom-adapt', id);
+  adaptEl.setAttribute('data-shadow-dom', true);
+
   base.setAttribute('data-shadow-dom-root', id);
+
+  el.appendChild(shieldEl);
+  el.appendChild(adaptEl);
   el.appendChild(base);
 
   return {
     set innerHTML(innerHTML) {
       const parser = new DOMParser();
-
       const doc = parser.parseFromString(getDocElement(el).outerHTML, 'text/html');
 
       const elPath = Path.fromElement(el, document);
       const mountPath = Path.fromElement(base, document);
 
       const mount = Path.toElement(elPath, doc);
-      const mountBase = mount.firstChild;
+      const mountBase = mount.lastChild;
       mountBase.innerHTML = innerHTML;
 
       const outerRules = List.map(doc.styleSheets, s => s.ownerNode)
@@ -65,8 +76,7 @@ function createShadowRoot(el) {
         ? outerRules.map(o => specificityMagnitude(o.selectorText)).sort((a, b) => a - b)[0]
         : 0) + 1;
 
-      interrupt(el, {id, initialFor, noop, spec});
-      const shieldEl = el.querySelector(`[data-shadow-dom-initial="${id}"]`);
+      shieldEl.textContent = interrupt(el, {id, initialFor, noop, spec});
 
       const escalator = `[data-shadow-dom-root="${id}"]${range(spec, `:not(#${noop})`).join('')}`;
 
@@ -93,7 +103,7 @@ function createShadowRoot(el) {
           return text;
         }, '');
 
-      shieldEl.textContent += addition;
+      adaptEl.textContent += addition;
       base.innerHTML = mountBase.innerHTML;
     },
     get innerHTML() {
@@ -179,9 +189,8 @@ function interrupt(el, {id, initialFor, noop, spec}) {
 
   const props = (all && initial) ? ['all'] : getAll();
 
-  const style = document.createElement('style');
-  style.setAttribute('data-shadow-dom-initial', id);
-  style.setAttribute('data-shadow-dom', true);
+//  style.setAttribute('data-shadow-dom-initial', id);
+//  style.setAttribute('data-shadow-dom', true);
 
   const escalator = range(spec, `:not(#${noop})`).join('');
 
@@ -189,7 +198,7 @@ function interrupt(el, {id, initialFor, noop, spec}) {
   // does *NOT* support "all" but "initial".
   // Turns out initial is slow to an extent that it froze
   // automated test runs, which does not happen for explicit values
-  style.textContent = `
+  return `
     [data-shadow-dom-root="${id}"]${escalator} {
       ${props.map(prop => `${prop}: ${initialFor(prop)};`).join('')}
     }
@@ -203,7 +212,7 @@ function interrupt(el, {id, initialFor, noop, spec}) {
     }
   `.split('\n').join('');
 
-  el.insertBefore(style, el.firstChild);
+//  el.insertBefore(style, el.firstChild);
 }
 
 function getDoc(el) {
