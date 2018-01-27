@@ -4,11 +4,11 @@ import {diff} from './diff';
 import {elementMayMatch} from './element-may-match';
 import {flattenRules} from './flatten-rules';
 import {getAll} from './get-all';
-import {getSelectorInside} from './get-selector-inside';
 import * as List from './list';
 import * as Path from './path';
 import {pushTo} from './push-to';
 import * as styleList from './style-list';
+import * as Selector from './selector';
 import {splitRule} from './split-rule';
 import {specificityMagnitude} from './specificity-magnitude';
 
@@ -87,7 +87,7 @@ function createShadowRoot(el) {
           return acc;
         }, [])
         .reduce((text, edit) => {
-          text += renderEdit(edit, {noop, doc, id, mountPath});
+          text += renderEdit(edit, {noop, doc, id, path: mountPath});
           return text;
         }, '');
 
@@ -143,10 +143,10 @@ function findAffectedRules(edit, ctx) {
     }, []);
 }
 
-function renderEdit(edit, {noop, id, doc, mountPath}) {
+function renderEdit(edit, {noop, id, doc, path}) {
   const spec = specificityMagnitude(edit.outerRule.selectorText);
   const prefix = `[data-shadow-dom-root="${id}"]${range(spec + 1, `:not(#${noop})`).join('')}`;
-  const inside = getSelectorInside(edit.selectorText, {doc, elPath: mountPath});
+  const inside = Selector.inside(edit.selectorText, {doc, path});
   const selector = `${prefix} ${inside}`;
   return wrapWithParents(`${selector} { ${edit.prop}: ${edit.value}${edit.priority}; }`, edit.rule);
 }
