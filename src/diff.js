@@ -1,4 +1,5 @@
 import find from 'lodash.find';
+import * as initials from './initials';
 import * as Path from './path';
 
 export function diff(styleNode, {mountPath}) {
@@ -39,7 +40,7 @@ export function diff(styleNode, {mountPath}) {
         acc.push({
           type: 'subtract',
           prop,
-          value: 'initial',
+          value: initials.get(prop),
           priority: a.priority === 'important' ? '!important' : '',
           rule: a.rule,
           selectorText: a.rule.selectorText,

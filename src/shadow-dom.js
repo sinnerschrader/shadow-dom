@@ -1,5 +1,6 @@
 import shortid from 'shortid';
 
+import * as initials from './initials';
 import {diff} from './diff';
 import {elementMayMatch} from './element-may-match';
 import {flattenRules} from './flatten-rules';
@@ -33,7 +34,6 @@ function createShadowRoot(el) {
   const base = document.createElement('div');
   const id = shortid.generate();
   const noop = shortid.generate();
-  const initialFor = getValue();
 
   el.innerHTML = '';
 
@@ -76,7 +76,7 @@ function createShadowRoot(el) {
         ? outerRules.map(o => specificityMagnitude(o.selectorText)).sort((a, b) => a - b)[0]
         : 0) + 1;
 
-      shieldEl.textContent = interrupt(el, {id, initialFor, noop, spec});
+      shieldEl.textContent = interrupt(el, {id, noop, spec});
 
       const escalator = `[data-shadow-dom-root="${id}"]${range(spec, `:not(#${noop})`).join('')}`;
 
@@ -183,15 +183,11 @@ function emitStyle(style) {
   }).join('\n');
 }
 
-function interrupt(el, {id, initialFor, noop, spec}) {
-  const all = supports('all');
-  const initial = supports('initial');
+function interrupt(el, {id, noop, spec}) {
+  const all = initials.supports('all');
+  const initial = initials.supports('initial');
 
   const props = (all && initial) ? ['all'] : getAll();
-
-//  style.setAttribute('data-shadow-dom-initial', id);
-//  style.setAttribute('data-shadow-dom', true);
-
   const escalator = range(spec, `:not(#${noop})`).join('');
 
   // Edge 15..17 is currently the only browser that
@@ -200,19 +196,17 @@ function interrupt(el, {id, initialFor, noop, spec}) {
   // automated test runs, which does not happen for explicit values
   return `
     [data-shadow-dom-root="${id}"]${escalator} {
-      ${props.map(prop => `${prop}: ${initialFor(prop)};`).join('')}
+      ${props.map(prop => `${prop}: ${initials.get(prop)};`).join('')}
     }
 
     [data-shadow-dom-root="${id}"]${escalator} ::before {
-      ${props.map(prop => `${prop}: ${initialFor(prop)};`).join('')}
+      ${props.map(prop => `${prop}: ${initials.get(prop)};`).join('')}
     }
 
     [data-shadow-dom-root="${id}"]${escalator} ::after {
-      ${props.map(prop => `${prop}: ${initialFor(prop)};`).join('')}
+      ${props.map(prop => `${prop}: ${initials.get(prop)};`).join('')}
     }
   `.split('\n').join('');
-
-//  el.insertBefore(style, el.firstChild);
 }
 
 function getDoc(el) {
@@ -227,32 +221,6 @@ function getDocElement(el) {
   return doc.documentElement;
 }
 
-function getValue() {
-  const frame = document.createElement('iframe');
-  document.body.appendChild(frame);
-
-  const win = frame.contentWindow;
-  const doc = frame.contentDocument;
-
-  const el = doc.createElement('div');
-  doc.body.appendChild(el);
-
-  const computed = win.getComputedStyle(el);
-  const props = Array.prototype.slice.call(computed, 0);
-  const styles = props.reduce((acc, prop) => {
-    acc[prop] = computed.getPropertyValue(prop);
-    return acc;
-  }, {});
-
-  document.body.removeChild(frame);
-  return prop => {
-    if (prop === 'all') {
-      return 'initial';
-    }
-    return styles[prop];
-  };
-}
-
 function range(count, fill) {
   const result = [];
 
@@ -265,51 +233,6 @@ function range(count, fill) {
   }
 
   return result;
-}
-
-function supports(feature) {
-  // Use CSS.supports if available
-  if ('CSS' in window && 'supports' in CSS) {
-    switch (feature) {
-      case 'all':
-        return CSS.supports('all', 'initial');
-      case 'initial':
-        return CSS.supports('font-size', 'initial');
-      default:
-        throw new TypeError(`supports: unknown feature "${feature}".`);
-    }
-  }
-
-  switch (feature) {
-    case 'all': {
-      const el = document.createElement('div');
-      return 'all' in el.style;
-    }
-    case 'initial': {
-      const frame = document.createElement('iframe');
-      document.body.appendChild(frame);
-
-      const doc = frame.contentDocument;
-      const win = frame.contentWindow;
-
-      const el = doc.createElement('div');
-      doc.body.appendChild(el);
-
-      const before = win.getComputedStyle(el).getPropertyValue('color');
-
-      doc.body.style.color = 'rgb(255, 0, 0)';
-      const inter = win.getComputedStyle(el).getPropertyValue('color');
-
-      el.style.color = 'initial';
-      const after = win.getComputedStyle(el).getPropertyValue('color');
-
-      const supported = before !== inter && after !== inter && before === after;
-      document.body.removeChild(frame);
-      return supported;
-    }
-    default:
-      throw new TypeError(`supports: unknown feature "${feature}".`);
-  }
 }
 
 function wrapWithParents(content, rule) {
