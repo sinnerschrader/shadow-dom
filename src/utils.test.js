@@ -1,8 +1,10 @@
 import {shadowDom} from './shadow-dom';
 
+const PARSER = new DOMParser();
+const DEFAULT_DOCUMENT = '<!doctype html><html><head></head><body></body></html>';
+
 export function dom(html) {
-  const parser = new DOMParser();
-  return parser.parseFromString(html, 'text/html');
+  return PARSER.parseFromString(html || DEFAULT_DOCUMENT, 'text/html');
 }
 
 export function fixture(name) {

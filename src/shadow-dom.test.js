@@ -1,5 +1,5 @@
 /* global it, expect, viewport */
-import {bootstrap, setup} from './utils.test';
+import {bootstrap, dom} from './utils.test';
 import {shadowDom} from './shadow-dom';
 
 const HAS_SHADOWDOM = ('attachShadow' in document.createElement('div'));
@@ -9,25 +9,25 @@ it('should exist', () => {
 });
 
 it('has a shadowRoot property', () => {
-  const {scope, cleanup} = setup();
-  expect(scope.shadowRoot).toBeDefined();
-  cleanup();
+  const doc = dom();
+  const actual = shadowDom(doc.body);
+  expect(actual.shadowRoot).toBeDefined();
 });
 
 it('is native if supported', () => {
-  const {scope, cleanup} = setup();
   if (HAS_SHADOWDOM) {
-    expect(scope.shadowRoot.toString()).toBe('[object ShadowRoot]');
+    const doc = dom();
+    const actual = shadowDom(doc.body);
+    expect(actual.shadowRoot.toString()).toBe('[object ShadowRoot]');
   }
-  cleanup();
 });
 
 it('is plain element if unsupported', () => {
-  const {scope, cleanup} = setup();
   if (!HAS_SHADOWDOM) {
-    expect(scope.shadowRoot.toString()).toBe('[object HTMLDivElement]');
+    const doc = dom();
+    const actual = shadowDom(doc.body);
+    expect(actual.shadowRoot.toString()).toBe('[object HTMLDivElement]');
   }
-  cleanup();
 });
 
 it('interrupts the cascade', () => {
