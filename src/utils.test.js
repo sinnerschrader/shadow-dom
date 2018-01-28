@@ -57,7 +57,7 @@ export function setup(html, options) {
   };
 
   const innerHTML = shadowElement.innerHTML;
-  const scope = shadowDom(shadowElement);
+  const scope = shadowDom(shadowElement, {forced: true});
   scope.shadowRoot.innerHTML = innerHTML;
 
   return {
