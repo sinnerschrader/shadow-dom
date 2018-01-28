@@ -56,7 +56,9 @@ function unfoldSelector(input) {
       result.nodes.push(n);
     }
 
-    results.push(result);
+    if (result.selector.length > 0) {
+      results.push(result);
+    }
   }
 
   return results;
