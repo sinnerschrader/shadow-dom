@@ -38,9 +38,9 @@ npx yarn test
 
 ## Testing
 
-`shadow-dom` ensures functionality via cross browser testing
+`shadow-dom` ensures functionality via cross browser testing. 
 
-* `yarm test --local`: Headless Chrome, Headless Firefox
+* `yarn test --local`: Headless Chrome, Headless Firefox
 * `yarn test --remote`: Test on BrowserStack
 
 Remote tests require BrowserStack credentials. Provide them by CLI or a `.env` file:
@@ -54,6 +54,9 @@ Testing may optionally be limited to browsers via cli flags
 
 * `yarn test -- --firefox` Test only in Firefox
 * `yarn test -- --chrome` Test only in Chrome
+
+Unit tests are placed next to the files tested in `src/**/[name].test.js` while 
+integration tests can be found in `test/*.js`.
 
 ```sh
 # All flags

@@ -33,12 +33,13 @@ module.exports = config => {
     frameworks: ['jasmine', 'viewport'],
     files: [
       {pattern: 'src/**/*.test.js', watched: false},
-      {pattern: './fixtures/*', included: false, served: true}
+      {pattern: 'test/**/*.js', watched: false}
     ],
     exclude: [
     ],
     preprocessors: {
-      'src/**/*.js': ['webpack']
+      'src/**/*.js': ['webpack'],
+      'test/**/*.js': ['webpack']
     },
     reporters: ['dots', 'BrowserStack'],
     port: 9876,

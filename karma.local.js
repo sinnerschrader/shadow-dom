@@ -11,11 +11,14 @@ module.exports = config => {
   const indicated = has('chrome') || has('safari') || has('firefox') || has('ie');
   const pattern = Array.isArray(cli.flags.pattern) ? cli.flags.pattern : [cli.flags.pattern];
 
-  const ps = pattern.map(p => `src/**/${p}`);
+  const ps = pattern.reduce((acc, p) => acc.concat([`src/**/${p}`, `test/**/${p}`]), []);
 
   const files = has('pattern')
     ? globby.sync(ps)
-    : [{pattern: 'src/**/*.test.js', watched: false}];
+    : [
+      {pattern: 'src/**/*.test.js', watched: false},
+      {pattern: 'test/**/*.js', watched: false}
+    ];
 
   if (has('pattern')) {
     console.log('Pattern:', ps.join(', '));
@@ -29,7 +32,8 @@ module.exports = config => {
       {pattern: './fixtures/*', included: false, served: true},
     ]),
     preprocessors: {
-      'src/**/*.js': ['webpack']
+      'src/**/*.js': ['webpack'],
+      'test/**/*.js': ['webpack']
     },
     reporters: ['dots'],
     colors: true,
