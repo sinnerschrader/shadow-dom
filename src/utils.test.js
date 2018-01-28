@@ -11,8 +11,8 @@ export function fixture(name) {
   return require(`../fixtures/${name}.html`);
 }
 
-export function bootstrap(name) {
-  return setup(fixture(name), {name});
+export function bootstrap(name, options = {}) {
+  return setup(fixture(name), {name: options.name || name});
 }
 
 export function getFontList(element) {
@@ -61,6 +61,7 @@ export function setup(html, options) {
   scope.shadowRoot.innerHTML = innerHTML;
 
   return {
+    ctx: el,
     cleanup,
     scope
   };

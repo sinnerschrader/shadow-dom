@@ -3,15 +3,19 @@ import {bootstrap} from '../src/utils.test';
 
 const HAS_SHADOWDOM = ('attachShadow' in document.createElement('div'));
 
+beforeEach(() => {
+  jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
+});
+
 it('prevents bleeding', () => {
   // TODO: Fix test for Webkit/Blink and enable
   if (HAS_SHADOWDOM) {
     return;
   }
 
-  const {scope, cleanup} = bootstrap('bleeding-scope');
+  const {ctx, scope, cleanup} = bootstrap('bleeding-scope');
 
-  const outer = document.querySelector('[data-test-name="bleeding-scope"] .b');
+  const outer = ctx.querySelector('.b');
   const outerColor = window.getComputedStyle(outer).getPropertyValue('color');
 
   const inner = scope.shadowRoot.querySelector('.b');
@@ -55,11 +59,10 @@ it('prevents bleeding via supports queries', () => {
   cleanup();
 });
 
-it('prevents bleeding after inner mutations', () => {
-  const {scope, cleanup} = bootstrap('bleeding-scope');
+it('prevents bleeding after inner style mutations', () => {
+  const {ctx, scope, cleanup} = bootstrap('bleeding-scope', {name: 'scope-style-mutationas'});
 
-  const outer = document.querySelector('[data-test-name="bleeding-scope"] .b');
-
+  const outer = ctx.querySelector('.b');
   const inner = scope.shadowRoot.querySelector('.b');
 
   const prev = scope.shadowRoot.querySelector('style');
@@ -72,7 +75,39 @@ it('prevents bleeding after inner mutations', () => {
     const outerBg = window.getComputedStyle(outer).getPropertyValue('background-color');
     const outerColor = window.getComputedStyle(outer).getPropertyValue('color');
 
-    expect(['rgba(0, 0, 0, 0)', 'transparent']).toContain(outerBg);
+    expect(outerBg).toContain('rgb(128, 128, 128)');
+    expect(outerColor).toBe('rgb(0, 128, 0)');
+
+    expect(innerBg).toBe('rgb(255, 255, 0)');
+    expect(innerColor).toBe('rgb(255, 0, 0)');
+    cleanup();
+  });
+});
+
+it('prevents bleeding after inner style additions', () => {
+  // TODO: Fix test for Webkit/Blink and enable
+  if (HAS_SHADOWDOM) {
+    return;
+  }
+
+  const {ctx, scope, cleanup} = bootstrap('bleeding-scope', {name: 'scope-style-additions'});
+
+  const outer = ctx.querySelector('.b');
+  const inner = scope.shadowRoot.querySelector('.b');
+
+  const style = document.createElement('style');
+  style.textContent = `.b { background-color: yellow; }`;
+
+  inner.appendChild(style);
+
+  setTimeout(() => {
+    const innerBg = window.getComputedStyle(inner).getPropertyValue('background-color');
+    const innerColor = window.getComputedStyle(inner).getPropertyValue('color');
+
+    const outerBg = window.getComputedStyle(outer).getPropertyValue('background-color');
+    const outerColor = window.getComputedStyle(outer).getPropertyValue('color');
+
+    expect(outerBg).toContain('rgb(128, 128, 128)');
     expect(outerColor).toBe('rgb(0, 128, 0)');
 
     expect(innerBg).toBe('rgb(255, 255, 0)');

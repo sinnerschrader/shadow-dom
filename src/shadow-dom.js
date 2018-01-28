@@ -86,28 +86,44 @@ function createShadowRoot(el, options) {
 
   shieldEl.textContent = interrupt(el, {id, noop, spec});
 
+  const mark = `/*scope:inside:${id}*/`;
+
   const observer = new MutationObserver(records => {
     const tasks = records
-      .map(record => {
+      .reduce((acc, record) => {
         const {addedNodes, target} = record;
-        const inside = base.contains(target);
+        const inside = base.contains(target) && target !== base;
+        const styleMuation = (target.tagName === 'STYLE' && addedNodes.length > 0);
 
-        // Styling added inside
-        if (inside && target.tagName === 'STYLE' && addedNodes.length > 0) {
-          if (List.every(addedNodes, n => n.data.indexOf(`/*scope:inside:${id}*/`) > -1)) {
-            return null;
+        // Styling added inside via style.textContent
+        if (inside && styleMuation) {
+          const ta = List.filter(addedNodes, a => a.nodeType === 3);
+
+          // Mutations performed by shadow-dom are marked via comment, skip if found
+          if (!List.every(ta, n => n.data.indexOf(mark) > -1)) {
+            acc.push({
+              type: 'scope',
+              scope: 'inside',
+              target
+            });
           }
-
-          return {
-            type: 'scope',
-            scope: 'inside',
-            target
-          };
         }
 
-        return null;
-      })
-      .filter(Boolean);
+        if (inside) {
+          // Styling add inside via new <style>
+          List
+            .filter(record.addedNodes, node => node.tagName === 'STYLE' && node.textContent.indexOf(mark) === -1)
+            .forEach(node => {
+              acc.push({
+                type: 'scope',
+                scope: 'inside',
+                target: node
+              });
+            });
+        }
+
+        return acc;
+      }, []);
 
     tasks.forEach(task => {
       if (task.type === 'scope') {
@@ -119,10 +135,12 @@ function createShadowRoot(el, options) {
             if (rule.selectorText.indexOf(escalator) > -1 || rule.selectorText.indexOf(ieEscalator) > -1) {
               return rule.cssText;
             }
-            return `${acc}\n/*scope:inside:${id}*/\n${prefixRule(rule, escalator)}`;
+            return `${acc}\n${mark}\n${prefixRule(rule, escalator)}`;
           }, '');
 
-          task.target.textContent = scoped;
+          if (task.target.textContent !== scoped) {
+            task.target.textContent = scoped;
+          }
         }
       }
     });
