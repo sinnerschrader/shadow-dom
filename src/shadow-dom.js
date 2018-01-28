@@ -14,11 +14,14 @@ import {splitRule} from './split-rule';
 import {specificityMagnitude} from './specificity-magnitude';
 
 export function shadowDom(el, options = {}) {  // eslint-disable-line import/prefer-default-export
-  const {document = global.document} = options;
+  const {
+    document = global.document,
+    forced = false
+  } = options;
 
   el.innerHTML = '';
 
-  if ('attachShadow' in HTMLElement.prototype) {
+  if (forced !== true && 'attachShadow' in HTMLElement.prototype) {
     el.attachShadow({mode: 'open'});
     return el;
   }

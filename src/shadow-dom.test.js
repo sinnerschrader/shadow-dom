@@ -29,3 +29,9 @@ it('is plain element if unsupported', () => {
     expect(actual.shadowRoot.toString()).toBe('[object HTMLDivElement]');
   }
 });
+
+it('is plain element if forced', () => {
+  const document = dom();
+  const actual = shadowDom(document.body, {document, forced: true});
+  expect(actual.shadowRoot.toString()).toBe('[object HTMLDivElement]');
+});
