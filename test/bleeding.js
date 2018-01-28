@@ -4,12 +4,17 @@ import {bootstrap} from '../src/utils.test';
 const HAS_SHADOWDOM = ('attachShadow' in document.createElement('div'));
 
 it('prevents bleeding', () => {
-  const {cleanup} = bootstrap('bleeding-scope');
+  const {scope, cleanup} = bootstrap('bleeding-scope');
 
   if (!HAS_SHADOWDOM) {
-    const b = document.querySelector('[data-test-name="bleeding-scope"] .b');
-    const color = window.getComputedStyle(b).getPropertyValue('color');
-    expect(color).toBe('rgb(0, 128, 0)');
+    const outer = document.querySelector('[data-test-name="bleeding-scope"] .b');
+    const outerColor = window.getComputedStyle(outer).getPropertyValue('color');
+
+    const inner = scope.shadowRoot.querySelector('.b');
+    const innerColor = window.getComputedStyle(inner).getPropertyValue('color');
+
+    expect(outerColor).toBe('rgb(0, 128, 0)');
+    expect(innerColor).toBe('rgb(255, 0, 0)');
   }
 
   cleanup();
