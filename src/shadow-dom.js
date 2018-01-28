@@ -13,7 +13,9 @@ import * as Selector from './selector';
 import {splitRule} from './split-rule';
 import {specificityMagnitude} from './specificity-magnitude';
 
-export function shadowDom(el) {  // eslint-disable-line import/prefer-default-export
+export function shadowDom(el, options = {}) {  // eslint-disable-line import/prefer-default-export
+  const {document = global.document} = options;
+
   el.innerHTML = '';
 
   if ('attachShadow' in HTMLElement.prototype) {
@@ -21,7 +23,7 @@ export function shadowDom(el) {  // eslint-disable-line import/prefer-default-ex
     return el;
   }
 
-  const shadowRoot = createShadowRoot(el);
+  const shadowRoot = createShadowRoot(el, {document});
 
   return {
     get shadowRoot() {
@@ -30,7 +32,9 @@ export function shadowDom(el) {  // eslint-disable-line import/prefer-default-ex
   };
 }
 
-function createShadowRoot(el) {
+function createShadowRoot(el, options) {
+  const {document} = options;
+
   const base = document.createElement('div');
   const id = shortid.generate();
   const noop = shortid.generate();
@@ -51,34 +55,86 @@ function createShadowRoot(el) {
   el.appendChild(adaptEl);
   el.appendChild(base);
 
+  const parser = new DOMParser();
+
+  const doc = parser.parseFromString(getDocElement(el).outerHTML, 'text/html');
+
+  const elPath = Path.fromElement(el, document);
+  const mountPath = Path.fromElement(base, document);
+
+  const mount = Path.toElement(elPath, doc);
+  const mountBase = mount.lastChild;
+
+  const outerRules = List.map(doc.styleSheets, s => s.ownerNode)
+    .filter(styleTag => !Path.contains(Path.fromElement(styleTag, doc), mountPath))
+    .reduce((acc, tag) => {
+      flattenRules(tag.sheet.cssRules)
+        .filter(rule => rule.type === CSSRule.STYLE_RULE)
+        .forEach(rule => pushTo(acc, splitRule(rule)));
+      return acc;
+    }, []);
+
+  const spec = (outerRules.length > 0
+    ? outerRules.map(o => specificityMagnitude(o.selectorText)).sort((a, b) => a - b)[0]
+    : 0) + 1;
+
+  const escalator = `[data-shadow-dom-root="${id}"]${range(spec + 1, `:not(#${noop})`).join('')}`;
+  const ieEscalator = `[data-shadow-dom-root='${id}']${range(spec + 1, `:not(#${noop})`).join('')}`;
+
+  shieldEl.textContent = interrupt(el, {id, noop, spec});
+
+  const observer = new MutationObserver(records => {
+    const tasks = records
+      .map(record => {
+        const {addedNodes, target} = record;
+        const inside = base.contains(target);
+
+        // Styling added inside
+        if (inside && target.tagName === 'STYLE' && addedNodes.length > 0) {
+          if (List.every(addedNodes, n => n.data.indexOf(`/*scope:inside:${id}*/`) > -1)) {
+            return null;
+          }
+
+          return {
+            type: 'scope',
+            scope: 'inside',
+            target
+          };
+        }
+
+        return null;
+      })
+      .filter(Boolean);
+
+    tasks.forEach(task => {
+      if (task.type === 'scope') {
+        const sheet = task.target.sheet;
+
+        // The sheet.ownerNode may have been removed from document
+        if (sheet) {
+          const scoped = List.reduce(sheet.cssRules, (acc, rule) => {
+            if (rule.selectorText.indexOf(escalator) > -1 || rule.selectorText.indexOf(ieEscalator) > -1) {
+              return rule.cssText;
+            }
+            return `${acc}\n/*scope:inside:${id}*/\n${prefixRule(rule, escalator)}`;
+          }, '');
+
+          task.target.textContent = scoped;
+        }
+      }
+    });
+  });
+
+  observer.observe(el, {
+    attributes: true,
+    childList: true,
+    subtree: true,
+    characterData: true
+  });
+
   return {
     set innerHTML(innerHTML) {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(getDocElement(el).outerHTML, 'text/html');
-
-      const elPath = Path.fromElement(el, document);
-      const mountPath = Path.fromElement(base, document);
-
-      const mount = Path.toElement(elPath, doc);
-      const mountBase = mount.lastChild;
       mountBase.innerHTML = innerHTML;
-
-      const outerRules = List.map(doc.styleSheets, s => s.ownerNode)
-        .filter(styleTag => !Path.contains(Path.fromElement(styleTag, doc), mountPath))
-        .reduce((acc, tag) => {
-          flattenRules(tag.sheet.cssRules)
-            .filter(rule => rule.type === CSSRule.STYLE_RULE)
-            .forEach(rule => pushTo(acc, splitRule(rule)));
-          return acc;
-        }, []);
-
-      const spec = (outerRules.length > 0
-        ? outerRules.map(o => specificityMagnitude(o.selectorText)).sort((a, b) => a - b)[0]
-        : 0) + 1;
-
-      shieldEl.textContent = interrupt(el, {id, noop, spec});
-
-      const escalator = `[data-shadow-dom-root="${id}"]${range(spec, `:not(#${noop})`).join('')}`;
 
       List.filter(doc.styleSheets, sheet => Path.contains(Path.fromElement(sheet.ownerNode, doc), mountPath))
         .forEach(sheet => {

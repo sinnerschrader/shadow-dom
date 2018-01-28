@@ -9,23 +9,23 @@ it('should exist', () => {
 });
 
 it('has a shadowRoot property', () => {
-  const doc = dom();
-  const actual = shadowDom(doc.body);
+  const document = dom();
+  const actual = shadowDom(document.body, {document});
   expect(actual.shadowRoot).toBeDefined();
 });
 
 it('is native if supported', () => {
   if (HAS_SHADOWDOM) {
-    const doc = dom();
-    const actual = shadowDom(doc.body);
+    const document = dom();
+    const actual = shadowDom(document.body, {document});
     expect(actual.shadowRoot.toString()).toBe('[object ShadowRoot]');
   }
 });
 
 it('is plain element if unsupported', () => {
   if (!HAS_SHADOWDOM) {
-    const doc = dom();
-    const actual = shadowDom(doc.body);
+    const document = dom();
+    const actual = shadowDom(document.body, {document});
     expect(actual.shadowRoot.toString()).toBe('[object HTMLDivElement]');
   }
 });
