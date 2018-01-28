@@ -27,6 +27,11 @@ export function elementMayMatch(node, selectorText) {
   const selectorNodes = parseSelector(selectorText)
     .filter(node => node.type !== 'pseudo' || SELECTING_PSEUDOS.indexOf(node.value) > -1);
 
-  const baseSelectorText = selectorNodes.map(selectorNode => String(selectorNode)).join('');
+  const baseSelectorText = selectorNodes.map(selectorNode => String(selectorNode)).join('').trim();
+
+  if (baseSelectorText.length === 0) {
+    return false;
+  }
+
   return elementMatches(node, baseSelectorText);
 }
