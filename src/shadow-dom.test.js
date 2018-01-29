@@ -35,3 +35,15 @@ it('is plain element if forced', () => {
   const actual = shadowDom(document.body, {document, forced: true});
   expect(actual.shadowRoot.toString()).toBe('[object HTMLDivElement]');
 });
+
+it('exposes innerHTML', () => {
+  const document = dom();
+  const actual = shadowDom(document.body, {document, forced: true});
+  expect(typeof actual.shadowRoot.innerHTML).toBe('string');
+});
+
+it('exposes appendChild', () => {
+  const document = dom();
+  const actual = shadowDom(document.body, {document, forced: true});
+  expect(typeof actual.shadowRoot.appendChild).toBe('function');
+});

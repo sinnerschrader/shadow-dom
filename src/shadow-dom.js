@@ -154,6 +154,9 @@ function createShadowRoot(el, options) {
   });
 
   return {
+    appendChild(el) {
+      base.appendChild(el);
+    },
     set innerHTML(innerHTML) {
       mountBase.innerHTML = innerHTML;
 
