@@ -4,8 +4,7 @@
   "description": "A shadow-dom ponyfill",
   "main": "./lib/shadow-dom.js",
   "scripts": {
-    "build": "npm run pack && npm run babel",
-    "pack": "webpack",
+    "build": "npm run babel",
     "babel": "babel src -d lib --ignore src/**/*.test.js",
     "lint": "xo",
     "test": "karma start karma.js"
