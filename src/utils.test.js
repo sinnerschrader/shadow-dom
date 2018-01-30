@@ -1,3 +1,4 @@
+import * as queryString from 'query-string';
 import {shadowDom} from './shadow-dom';
 
 const PARSER = new DOMParser();
@@ -31,6 +32,9 @@ export function getKeyFrames(animationName, ctx) {
 }
 
 export function setup(html, options) {
+  const frame = document.createElement('iframe');
+  document.body.appendChild(frame);
+
   const el = document.createElement('div');
   if (options && options.name) {
     el.setAttribute('data-test-name', options.name);
@@ -44,7 +48,6 @@ export function setup(html, options) {
     el.appendChild(auto);
   }
 
-  document.body.appendChild(el);
 
   const shadowElement = el.querySelector('.shadow-dom');
 
@@ -53,16 +56,42 @@ export function setup(html, options) {
   }
 
   const cleanup = () => {
-    document.body.removeChild(el);
+    if (queryString.parse(top.location.search).cleanup === 'false') {
+      return;
+    }
+
+    document.body.removeChild(frame);
   };
 
+  const viewport = {
+    set(num) {
+      frame.style.width = `${num}px`;
+    },
+    reset() {
+      if (queryString.parse(top.location.search).cleanup === 'false') {
+        return;
+      }
+      frame.style.width = null;
+    }
+  };
+
+  frame.addEventListener('load', () => {
+    // Restore iframe contents on Firefox after load event
+    frame.contentDocument.body.appendChild(el);
+  });
+
+  frame.contentDocument.body.appendChild(el);
+
   const innerHTML = shadowElement.innerHTML;
-  const scope = shadowDom(shadowElement, {forced: true});
+  const scope = shadowDom(shadowElement, {document: frame.contentDocument, forced: true});
   scope.shadowRoot.innerHTML = innerHTML;
 
   return {
     ctx: el,
     cleanup,
+    viewport,
+    window: frame.contentWindow,
+    document: frame.contentDocument,
     scope
   };
 }

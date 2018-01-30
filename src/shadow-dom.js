@@ -1,3 +1,7 @@
+import './polyfills';
+
+import postcss from 'postcss';
+import safeParser from 'postcss-safe-parser';
 import shortid from 'shortid';
 
 import * as initials from './initials';
@@ -82,110 +86,116 @@ function createShadowRoot(el, options) {
     : 0) + 1;
 
   const escalator = `[data-shadow-dom-root="${id}"]${range(spec + 1, `:not(#${noop})`).join('')}`;
-  const ieEscalator = `[data-shadow-dom-root='${id}']${range(spec + 1, `:not(#${noop})`).join('')}`;
+  const reEscalator = new RegExp(`^\\[data-shadow-dom-root=["']${id}["']\\]${range(spec + 1, `:not\\(\\#${noop}\\)`).join('')}`);
 
   shieldEl.textContent = interrupt(el, {id, noop, spec});
 
   const mark = `/*scope:inside:${id}*/`;
 
   const observer = new MutationObserver(records => {
-    const tasks = records
-      .reduce((acc, record) => {
-        const {addedNodes, target} = record;
-        const inside = base.contains(target) && target !== base;
+    const tasks = [];
 
-        const styleMutation = (target.tagName === 'STYLE' && addedNodes.length > 0)
-          || (record.type === 'characterData' && target.parentNode.tagName === 'STYLE');
+    Promise
+      .all(records.map(record => {
+        const inside = base.contains(record.target) && record.target !== base;
 
-        const mutNodes = record.type === 'characterData' ? [record.target] : record.addedNodes;
+        if (!inside) {
+          return Promise.resolve();
+        }
 
-        if (inside) {
-          // Direct edit <style>
-          if (styleMutation && List.some(mutNodes, n => n.textContent.indexOf(escalator) === -1)) {
-            acc.push({
-              type: 'scope',
-              scope: 'inside',
-              target: record.type === 'characterData' ? target.parentNode : target
-            });
+        switch (record.type) {
+          case 'characterData': {
+            // Styling edited inside existing <style> in subtree
+            if (record.target.nodeType !== Node.TEXT_NODE || record.target.parentNode.tagName !== 'STYLE') {
+              return Promise.resolve();
+            }
+
+            return getSelectors(record.target.data)
+              .then(selectors => {
+                if (List.some(selectors, s => !s.match(reEscalator))) {
+                  tasks.push({
+                    type: 'scope',
+                    scope: 'inside',
+                    target: record.target.parentNode
+                  });
+                }
+              });
           }
+          case 'childList': {
+            // Styling add inside via new <style> in subtree
+            List.forEach(record.addedNodes, node => {
+              if (node.nodeType !== Node.ELEMENT_NODE || node.textContent.indexOf(mark) > -1) {
+                return Promise.resolve();
+              }
 
-          // Styling add inside via new <style> in subtree
-          List.forEach(record.addedNodes, node => {
-            if (node.nodeType !== Node.ELEMENT_NODE || node.textContent.indexOf(mark) > -1) {
-              return;
-            }
+              if (node.tagName === 'STYLE') {
+                tasks.push({
+                  type: 'scope',
+                  scope: 'inside',
+                  target: node
+                });
+                return;
+              }
 
-            if (node.tagName === 'STYLE') {
-              acc.push({
-                type: 'scope',
-                scope: 'inside',
-                target: node
-              });
-              return;
-            }
-
-            List.forEach(node.querySelectorAll('style'), style => {
-              acc.push({
-                type: 'scope',
-                scope: 'inside',
-                target: style
+              List.forEach(node.querySelectorAll('style'), style => {
+                tasks.push({
+                  type: 'scope',
+                  scope: 'inside',
+                  target: style
+                });
               });
             });
-          });
-        }
 
-        if (inside && !styleMutation && (record.type === 'childList' || record.type === 'attributes') && (record.addedNodes.length > 0 || record.removedNodes.length > 0)) {
-          acc.push({
-            type: 'adapt',
-            scope: 'inside',
-            target: record.target
-          });
-        }
-
-        return acc;
-      }, []);
-
-    tasks.forEach(task => {
-      if (task.type === 'scope') {
-        const sheet = task.target.sheet;
-
-        // The sheet.ownerNode may have been removed from document
-        if (sheet) {
-          const scoped = List.reduce(sheet.cssRules, (acc, rule) => {
-            if (rule.selectorText.indexOf(escalator) > -1 || rule.selectorText.indexOf(ieEscalator) > -1) {
-              return rule.cssText;
-            }
-            return `${acc}\n${mark}\n${prefixRule(rule, escalator)}`;
-          }, '');
-
-          if (task.target.textContent !== scoped) {
-            task.target.textContent = scoped;
+            return Promise.resolve();
+          }
+          default: {
+            return Promise.resolve();
           }
         }
-      }
+      }))
+      .then(() => {
+        tasks.forEach(task => {
+          if (task.type === 'scope') {
+            const sheet = task.target.sheet;
 
-      if (task.type === 'adapt') {
-        // TODO: Do this incrementally
-        doc = parser.parseFromString(getDocElement(el).outerHTML, 'text/html');
-        const nodes = styleList.parse(doc, {path: mountPath}).filter(n => Path.contains(n.path, mountPath));
+            // The sheet.ownerNode may have been removed from document
+            if (sheet) {
+              const scoped = List.reduce(sheet.cssRules, (acc, rule) => {
+                if (rule.selectorText.match(reEscalator)) {
+                  return rule.cssText;
+                }
+                return `${acc}\n${mark}\n${prefixRule(rule, escalator)}`;
+              }, '');
 
-        const visitedRules = [];
+              if (task.target.textContent !== scoped) {
+                task.target.textContent = scoped;
+              }
+            }
+          }
 
-        const adaption = nodes.reduce((acc, i) => pushTo(acc, diff(i, {mountPath})), [])
-          .reduce((acc, edit) => {
-            visitedRules.push(edit.rule);
-            acc.push(edit);
-            pushTo(acc, findAffectedRules(edit, {doc, escalator, mountPath, nodes, visitedRules}));
-            return acc;
-          }, [])
-          .reduce((text, edit) => {
-            text += renderEdit(edit, {noop, doc, id, path: mountPath});
-            return text;
-          }, '');
+          if (task.type === 'adapt') {
+            // TODO: Do this incrementally
+            doc = parser.parseFromString(getDocElement(el).outerHTML, 'text/html');
+            const nodes = styleList.parse(doc, {path: mountPath}).filter(n => Path.contains(n.path, mountPath));
 
-        adaptEl.textContent += adaption;
-      }
-    });
+            const visitedRules = [];
+
+            const adaption = nodes.reduce((acc, i) => pushTo(acc, diff(i, {mountPath})), [])
+              .reduce((acc, edit) => {
+                visitedRules.push(edit.rule);
+                acc.push(edit);
+                pushTo(acc, findAffectedRules(edit, {doc, escalator, mountPath, nodes, visitedRules}));
+                return acc;
+              }, [])
+              .reduce((text, edit) => {
+                text += renderEdit(edit, {noop, doc, id, path: mountPath});
+                return text;
+              }, '');
+
+            adaptEl.textContent += adaption;
+          }
+        });
+      });
   });
 
   observer.observe(el, {
@@ -274,6 +284,22 @@ function findAffectedRules(edit, ctx) {
 
       return acc;
     }, []);
+}
+
+function getSelectors(css) {
+  const results = [];
+
+  return postcss([
+    css => {
+      css.walkRules(rule => {
+        if (rule.selector) {
+          results.push(rule.selector);
+        }
+      });
+    }
+  ])
+  .process(css, {from: undefined, parser: safeParser})
+  .then(() => results);
 }
 
 function renderEdit(edit, {noop, id, doc, path}) {

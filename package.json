@@ -12,13 +12,13 @@
   },
   "babel": {
     "plugins": [
-      "transform-object-assign",
       "transform-es2015-arrow-functions"
     ],
     "presets": [
       [
         "env",
         {
+          "useBuiltIns": "usage",
           "targets": {
             "browsers": [
               "last 2 versions",
@@ -77,9 +77,13 @@
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-loader": "^7.1.2",
+    "babel-plugin-add-module-exports": "^0.2.1",
+    "babel-plugin-async-to-promises": "^1.0.5",
     "babel-plugin-transform-object-assign": "^6.22.0",
+    "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-env": "^1.6.1",
     "dotenv": "^4.0.0",
+    "fast-async": "^6.3.0",
     "globby": "^7.1.1",
     "html-styles": "^1.0.0",
     "jasmine-core": "^2.8.0",
@@ -95,7 +99,9 @@
     "lodash.find": "^4.6.0",
     "meow": "^4.0.0",
     "puppeteer": "^0.13.0",
+    "query-string": "^5.0.1",
     "raw-loader": "^0.5.1",
+    "resolve-pkg": "^1.0.0",
     "uglifyjs-webpack-plugin": "^1.1.2",
     "webpack": "^3.8.0",
     "xo": "^0.18.2"
@@ -106,7 +112,10 @@
     "lodash.findindex": "^4.6.0",
     "lodash.partition": "^4.6.0",
     "lodash.some": "^4.6.0",
+    "postcss": "^6.0.16",
+    "postcss-safe-parser": "^3.0.1",
     "postcss-selector-parser": "^3.1.1",
+    "promise-polyfill": "^7.0.2",
     "shortid": "^2.2.8",
     "specificity": "^0.3.2"
   }

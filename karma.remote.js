@@ -1,5 +1,7 @@
+const path = require('path');
 const env = require('dotenv');
 const meow = require('meow');
+const resolvePkg = require('resolve-pkg');
 
 const cli = meow();
 
@@ -53,7 +55,13 @@ module.exports = config => {
         loaders: [
           {
             test: /\.js?$/,
-            loader: 'babel-loader'
+            loader: 'babel-loader',
+            include: [
+              path.resolve(__dirname, 'src'),
+              path.resolve(__dirname, 'test'),
+              require.resolve('dot-prop'), // Transpile, targets node 4
+              require.resolve('postcss-selector-parser') // Transpile, targets node 4
+            ]
           },
           {
             test: /\.html?$/,
