@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "A shadow-dom ponyfill",
   "main": "./lib/shadow-dom.js",
-  "browser": "./lib/shadow-dom.bundle.js",
   "scripts": {
     "build": "npm run pack && npm run babel",
     "pack": "webpack",
