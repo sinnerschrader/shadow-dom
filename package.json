@@ -1,6 +1,6 @@
 {
   "name": "shadow-dom",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A shadow-dom ponyfill",
   "main": "./lib/shadow-dom.js",
   "files": [
