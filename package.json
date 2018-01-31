@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "A shadow-dom ponyfill",
   "main": "./lib/shadow-dom.js",
+  "files": ["lib/"],
   "scripts": {
     "build": "npm run babel",
     "babel": "babel src -d lib --ignore src/**/*.test.js",
